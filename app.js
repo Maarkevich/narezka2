@@ -270,7 +270,7 @@ function splitImage() {
     if (!originalImage) return;
     const { rows, cols } = getGridSize();
     const pieceWidth = 100, pieceHeight = 100, padding = currentPadding;
-    const paddingDir = paddingDirection.value; // 'between', 'top', 'bottom'
+    const paddingDir = paddingDirection.value;
     
     const targetWidth = cols * pieceWidth, targetHeight = rows * pieceHeight;
     
@@ -289,7 +289,6 @@ function splitImage() {
             finalCanvas.width = pieceWidth; finalCanvas.height = pieceHeight;
             const finalCtx = finalCanvas.getContext('2d');
             
-            // Логика отступов в зависимости от выбранного направления
             let topPadding = 0;
             let bottomPadding = 0;
             
@@ -307,7 +306,8 @@ function splitImage() {
             const x = col * pieceWidth, y = row * pieceHeight;
             const sourceHeight = pieceHeight - topPadding - bottomPadding;
             
-            finalCtx.drawImage(tempCanvas, x, y + topPadding, pieceWidth, sourceHeight, 0, topPadding, pieceWidth, sourceHeight);
+            // ИСПРАВЛЕНО: берем пиксели начиная с y (не y + topPadding!)
+            finalCtx.drawImage(tempCanvas, x, y, pieceWidth, sourceHeight, 0, topPadding, pieceWidth, sourceHeight);
             
             const dataUrl = finalCanvas.toDataURL('image/png');
             splitImages.push({ dataUrl, name: generateFileName(partIndex) });
