@@ -1,11 +1,13 @@
-const CACHE_NAME = 'image-splitter-v1';
+const CACHE_NAME = 'image-splitter-v2';
 const urlsToCache = [
     '/',
     '/index.html',
+    '/styles.css',
     '/app.js',
     '/manifest.json',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-    'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'
+    'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js'
 ];
 
 // Установка Service Worker
@@ -17,6 +19,7 @@ self.addEventListener('install', event => {
                 return cache.addAll(urlsToCache);
             })
     );
+    self.skipWaiting();
 });
 
 // Активация и очистка старых кэшей
@@ -33,6 +36,7 @@ self.addEventListener('activate', event => {
             );
         })
     );
+    self.clients.claim();
 });
 
 // Перехват запросов

@@ -1,7 +1,7 @@
 {
     "name": "Image Splitter 100x100",
     "short_name": "ImgSplit",
-    "description": "Нарезка изображений на части 100×100 пикселей",
+    "description": "Нарезка изображений на части 100×100 пикселей с отступами",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#667eea",
