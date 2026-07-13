@@ -1,4 +1,4 @@
-const CACHE_NAME = 'image-splitter-v2';
+const CACHE_NAME = 'image-splitter-v3';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -10,7 +10,6 @@ const urlsToCache = [
     'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js'
 ];
 
-// Установка Service Worker
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
@@ -22,7 +21,6 @@ self.addEventListener('install', event => {
     self.skipWaiting();
 });
 
-// Активация и очистка старых кэшей
 self.addEventListener('activate', event => {
     const cacheWhitelist = [CACHE_NAME];
     event.waitUntil(
@@ -39,7 +37,6 @@ self.addEventListener('activate', event => {
     self.clients.claim();
 });
 
-// Перехват запросов
 self.addEventListener('fetch', event => {
     event.respondWith(
         caches.match(event.request)

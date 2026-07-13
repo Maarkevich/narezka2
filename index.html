@@ -18,7 +18,7 @@
 
         <div class="info">
             <strong>💡 Важно:</strong> Все части будут ровно 100×100 пикселей. 
-            Изображение можно перемещать и масштабировать. Отступы: 10px сверху и снизу.
+            Изображение можно перемещать и масштабировать. Отступы: 5px прозрачные между частями.
         </div>
 
         <!-- Область загрузки / просмотра оригинала -->
@@ -35,11 +35,14 @@
             <!-- Редактор изображения (скрыт до загрузки) -->
             <div class="image-editor" id="imageEditor" style="display: none;">
                 <div class="editor-toolbar">
-                    <button class="tool-btn" id="zoomOutBtn" title="Уменьшить">
+                    <button class="tool-btn" id="zoomOutBtn" title="Уменьшить на 5%">
                         <i class="fas fa-minus"></i>
                     </button>
-                    <span class="zoom-level" id="zoomLevel">100%</span>
-                    <button class="tool-btn" id="zoomInBtn" title="Увеличить">
+                    <div class="zoom-control">
+                        <input type="number" id="zoomInput" class="zoom-input" value="100" min="10" max="500" step="5">
+                        <span class="zoom-percent">%</span>
+                    </div>
+                    <button class="tool-btn" id="zoomInBtn" title="Увеличить на 5%">
                         <i class="fas fa-plus"></i>
                     </button>
                     <button class="tool-btn" id="resetViewBtn" title="Сбросить вид">
@@ -54,7 +57,7 @@
                     <div class="grid-overlay" id="gridOverlay"></div>
                 </div>
                 <div class="editor-hint">
-                    <i class="fas fa-mouse"></i> Перетаскивайте для перемещения • Колесико для масштабирования
+                    <i class="fas fa-mouse"></i> Перетаскивайте для перемещения • Колесико/щипок для масштабирования
                 </div>
             </div>
         </div>
@@ -98,7 +101,7 @@
                 <button class="btn download-zip" id="downloadZipBtn" disabled>
                     <i class="fas fa-file-archive"></i> Скачать все части (ZIP)
                 </button>
-                <button class="download-png" id="downloadPngBtn" disabled>
+                <button class="btn download-png" id="downloadPngBtn" disabled>
                     <i class="fas fa-images"></i> Скачать все части (PNG)
                 </button>
             </div>
