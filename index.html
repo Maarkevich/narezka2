@@ -9,22 +9,30 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <h1><i class="fas fa-cut"></i> Image Splitter</h1>
+        <h1>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+            Image Splitter
+        </h1>
         <p class="subtitle">Нарезка изображений на части 100×100 пикселей</p>
 
         <div class="info">
             <strong>💡 Важно:</strong> Все части будут ровно 100×100 пикселей. 
-            Изображение можно перемещать и масштабировать. Отступы: 5px прозрачные между частями.
+            Изображение можно перемещать и масштабировать. Отступы настраиваются.
         </div>
 
-        <!-- Область загрузки / просмотра оригинала -->
+        <!-- Offline indicator -->
+        <div class="offline-indicator" id="offlineIndicator" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+            Оффлайн режим
+        </div>
+
+        <!-- Область загрузки -->
         <div class="upload-section">
             <div class="upload-area" id="uploadArea">
-                <i class="fas fa-cloud-upload-alt"></i>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 <p>Нажмите или перетащите изображение сюда</p>
                 <p style="font-size: 0.8em; color: #999; margin-top: 10px;">
                     Поддерживаются: JPG, PNG, WebP
@@ -32,24 +40,24 @@
             </div>
             <input type="file" id="fileInput" accept="image/*">
 
-            <!-- Редактор изображения (скрыт до загрузки) -->
+            <!-- Редактор изображения -->
             <div class="image-editor" id="imageEditor" style="display: none;">
                 <div class="editor-toolbar">
                     <button class="tool-btn" id="zoomOutBtn" title="Уменьшить на 5%">
-                        <i class="fas fa-minus"></i>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     </button>
                     <div class="zoom-control">
                         <input type="number" id="zoomInput" class="zoom-input" value="100" min="10" max="500" step="5">
                         <span class="zoom-percent">%</span>
                     </div>
                     <button class="tool-btn" id="zoomInBtn" title="Увеличить на 5%">
-                        <i class="fas fa-plus"></i>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     </button>
                     <button class="tool-btn" id="resetViewBtn" title="Сбросить вид">
-                        <i class="fas fa-compress-arrows-alt"></i>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
                     </button>
                     <button class="tool-btn" id="changeImageBtn" title="Заменить изображение">
-                        <i class="fas fa-exchange-alt"></i>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
                     </button>
                 </div>
                 <div class="canvas-container" id="canvasContainer">
@@ -57,7 +65,8 @@
                     <div class="grid-overlay" id="gridOverlay"></div>
                 </div>
                 <div class="editor-hint">
-                    <i class="fas fa-mouse"></i> Перетаскивайте для перемещения • Колесико/щипок для масштабирования
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;"><rect x="6" y="3" width="12" height="18" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                    Перетаскивайте для перемещения • Колесико/щипок для масштабирования
                 </div>
             </div>
         </div>
@@ -87,29 +96,37 @@
                 </label>
             </div>
 
+            <div class="control-group">
+                <label for="paddingInput">Отступы между частями (пиксели):</label>
+                <input type="number" id="paddingInput" min="0" max="50" step="1" value="5">
+                <small style="color: #999; margin-top: 5px; display: block;">
+                    Отступы применяются только между соприкасающимися частями
+                </small>
+            </div>
+
             <button class="btn" id="splitBtn" disabled>
-                <i class="fas fa-cut"></i> Нарезать изображение
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                Нарезать изображение
             </button>
         </div>
 
         <!-- Превью результатов -->
         <div class="preview-section" id="previewSection">
-            <h2><i class="fas fa-th"></i> Результат нарезки:</h2>
+            <h2>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Результат нарезки:
+            </h2>
             <div class="grid-preview" id="gridPreview"></div>
             
             <div class="download-buttons">
-                <button class="btn download-zip" id="downloadZipBtn" disabled>
-                    <i class="fas fa-file-archive"></i> Скачать все части (ZIP)
-                </button>
                 <button class="btn download-png" id="downloadPngBtn" disabled>
-                    <i class="fas fa-images"></i> Скачать все части (PNG)
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Скачать все части (PNG)
                 </button>
             </div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

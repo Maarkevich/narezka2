@@ -26,6 +26,15 @@ h1 {
     color: #4a90d9;
     margin-bottom: 10px;
     font-size: 2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+h1 svg {
+    width: 1em;
+    height: 1em;
 }
 
 .subtitle {
@@ -45,6 +54,26 @@ h1 {
 
 .info strong {
     color: #1976d2;
+}
+
+/* Offline indicator */
+.offline-indicator {
+    background: #ff9800;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.offline-indicator svg {
+    width: 20px;
+    height: 20px;
 }
 
 /* Upload Section */
@@ -73,8 +102,9 @@ h1 {
     transform: translateY(-2px);
 }
 
-.upload-area i {
-    font-size: 56px;
+.upload-area svg {
+    width: 64px;
+    height: 64px;
     color: #4a90d9;
     margin-bottom: 15px;
 }
@@ -113,7 +143,11 @@ h1 {
     justify-content: center;
     transition: all 0.2s;
     color: #4a90d9;
-    font-size: 16px;
+}
+
+.tool-btn svg {
+    width: 20px;
+    height: 20px;
 }
 
 .tool-btn:hover {
@@ -214,11 +248,6 @@ h1 {
     border-top: 1px solid #ddd;
 }
 
-.editor-hint i {
-    margin-right: 5px;
-    color: #4a90d9;
-}
-
 /* Controls */
 .controls {
     background: #f8f9ff;
@@ -241,6 +270,13 @@ h1 {
     margin-bottom: 8px;
     font-weight: 600;
     color: #555;
+}
+
+.control-group small {
+    display: block;
+    margin-top: 5px;
+    color: #999;
+    font-size: 0.85em;
 }
 
 select, input[type="number"] {
@@ -274,6 +310,11 @@ select:focus, input:focus {
     gap: 10px;
 }
 
+.btn svg {
+    width: 20px;
+    height: 20px;
+}
+
 .btn:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
@@ -301,6 +342,14 @@ select:focus, input:focus {
     margin-bottom: 15px;
     color: #4a90d9;
     font-size: 1.5em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.preview-section h2 svg {
+    width: 1em;
+    height: 1em;
 }
 
 .grid-preview {
@@ -324,12 +373,8 @@ select:focus, input:focus {
 
 .download-buttons {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 15px;
-}
-
-.download-zip {
-    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
 }
 
 .download-png {
@@ -348,10 +393,6 @@ select:focus, input:focus {
     
     .canvas-container {
         height: 350px;
-    }
-    
-    .download-buttons {
-        grid-template-columns: 1fr;
     }
     
     .grid-preview img {

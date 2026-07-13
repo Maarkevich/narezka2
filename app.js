@@ -8,6 +8,7 @@ let isDragging = false;
 let dragStartX = 0;
 let dragStartY = 0;
 let imageLoaded = false;
+let currentPadding = 5;
 
 // Canvas и контекст
 const canvas = document.getElementById('editCanvas');
@@ -19,11 +20,9 @@ const fileInput = document.getElementById('fileInput');
 const imageEditor = document.getElementById('imageEditor');
 const canvasContainer = document.getElementById('canvasContainer');
 const gridOverlay = document.getElementById('gridOverlay');
-const controls = document.getElementById('controls');
 const previewSection = document.getElementById('previewSection');
 const gridPreview = document.getElementById('gridPreview');
 const splitBtn = document.getElementById('splitBtn');
-const downloadZipBtn = document.getElementById('downloadZipBtn');
 const downloadPngBtn = document.getElementById('downloadPngBtn');
 const zoomInput = document.getElementById('zoomInput');
 const zoomInBtn = document.getElementById('zoomInBtn');
@@ -34,23 +33,34 @@ const gridSize = document.getElementById('gridSize');
 const customRows = document.getElementById('customRows');
 const customCols = document.getElementById('customCols');
 const useCustomGrid = document.getElementById('useCustomGrid');
+const paddingInput = document.getElementById('paddingInput');
+const offlineIndicator = document.getElementById('offlineIndicator');
 
 // Инициализация
 function init() {
     setupEventListeners();
     setupCanvas();
+    checkOnlineStatus();
 }
 
-// Настройка canvas
+function checkOnlineStatus() {
+    if (!navigator.onLine) {
+        offlineIndicator.style.display = 'flex';
+    } else {
+        offlineIndicator.style.display = 'none';
+    }
+}
+
+window.addEventListener('online', checkOnlineStatus);
+window.addEventListener('offline', checkOnlineStatus);
+
 function setupCanvas() {
     const rect = canvasContainer.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
-    
     updateCanvasTransform();
 }
 
-// Обновление трансформации canvas
 function updateCanvasTransform() {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -68,42 +78,26 @@ function updateCanvasTransform() {
     }
 }
 
-// Настройка обработчиков событий
 function setupEventListeners() {
-    // Загрузка файла
     uploadArea.addEventListener('click', () => fileInput.click());
     changeImageBtn.addEventListener('click', () => fileInput.click());
     
-    uploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadArea.classList.add('dragover');
-    });
-    
-    uploadArea.addEventListener('dragleave', () => {
-        uploadArea.classList.remove('dragover');
-    });
-    
+    uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+    uploadArea.addEventListener('dragleave', () => { uploadArea.classList.remove('dragover'); });
     uploadArea.addEventListener('drop', (e) => {
         e.preventDefault();
         uploadArea.classList.remove('dragover');
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            handleFile(files[0]);
-        }
+        if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
     });
     
     fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-            handleFile(e.target.files[0]);
-        }
+        if (e.target.files.length > 0) handleFile(e.target.files[0]);
     });
     
-    // Zoom controls
     zoomInBtn.addEventListener('click', () => zoom(0.05));
     zoomOutBtn.addEventListener('click', () => zoom(-0.05));
     resetViewBtn.addEventListener('click', resetView);
     
-    // Ручной ввод зума
     zoomInput.addEventListener('change', (e) => {
         let value = parseInt(e.target.value);
         if (isNaN(value)) value = 100;
@@ -113,27 +107,27 @@ function setupEventListeners() {
         updateCanvasTransform();
     });
     
-    zoomInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.target.blur();
-        }
+    zoomInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') e.target.blur(); });
+    
+    paddingInput.addEventListener('input', (e) => {
+        let value = parseInt(e.target.value);
+        if (isNaN(value) || value < 0) value = 0;
+        if (value > 50) value = 50;
+        currentPadding = value;
+        if (previewSection.classList.contains('active')) updateGridPreviewGap();
     });
     
-    // Pan and zoom на canvas
     canvas.addEventListener('mousedown', startDrag);
     canvas.addEventListener('mousemove', drag);
     canvas.addEventListener('mouseup', endDrag);
     canvas.addEventListener('mouseleave', endDrag);
     canvas.addEventListener('wheel', handleWheel, {passive: false});
     
-    // Touch events
     canvas.addEventListener('touchstart', handleTouchStart, {passive: false});
     canvas.addEventListener('touchmove', handleTouchMove, {passive: false});
     canvas.addEventListener('touchend', endDrag);
     
-    // Controls
     splitBtn.addEventListener('click', splitImage);
-    downloadZipBtn.addEventListener('click', downloadAllAsZip);
     downloadPngBtn.addEventListener('click', downloadAllAsPng);
     
     gridSize.addEventListener('change', updateGrid);
@@ -141,36 +135,24 @@ function setupEventListeners() {
     customCols.addEventListener('input', updateGrid);
     useCustomGrid.addEventListener('change', updateGrid);
     
-    // Resize observer
     window.addEventListener('resize', () => {
         setupCanvas();
-        if (originalImage) {
-            updateCanvasTransform();
-            updateGrid();
-        }
+        if (originalImage) { updateCanvasTransform(); updateGrid(); }
     });
 }
 
-// Обработка файла
 function handleFile(file) {
-    if (!file.type.startsWith('image/')) {
-        alert('Пожалуйста, загрузите изображение!');
-        return;
-    }
+    if (!file.type.startsWith('image/')) { alert('Пожалуйста, загрузите изображение!'); return; }
     
     const reader = new FileReader();
     reader.onload = (e) => {
         originalImage = new Image();
         originalImage.onload = () => {
             imageLoaded = true;
-            
             uploadArea.style.display = 'none';
             imageEditor.style.display = 'block';
-            
             resetView();
-            
             splitBtn.disabled = false;
-            
             updateGrid();
         };
         originalImage.src = e.target.result;
@@ -178,7 +160,6 @@ function handleFile(file) {
     reader.readAsDataURL(file);
 }
 
-// Zoom
 function zoom(delta) {
     const newZoom = Math.max(0.1, Math.min(5, currentZoom + delta));
     currentZoom = newZoom;
@@ -187,14 +168,11 @@ function zoom(delta) {
 }
 
 function resetView() {
-    currentZoom = 1;
-    panX = 0;
-    panY = 0;
+    currentZoom = 1; panX = 0; panY = 0;
     zoomInput.value = 100;
     updateCanvasTransform();
 }
 
-// Drag
 function startDrag(e) {
     isDragging = true;
     dragStartX = e.clientX - panX;
@@ -210,39 +188,26 @@ function drag(e) {
     updateCanvasTransform();
 }
 
-function endDrag() {
-    isDragging = false;
-    canvas.style.cursor = 'move';
-}
+function endDrag() { isDragging = false; canvas.style.cursor = 'move'; }
 
 function handleWheel(e) {
     e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.05 : 0.05;
-    zoom(delta);
+    zoom(e.deltaY > 0 ? -0.05 : 0.05);
 }
 
-// Touch events
 let initialPinchDistance = null;
-
 function handleTouchStart(e) {
-    if (e.touches.length === 2) {
-        initialPinchDistance = getPinchDistance(e.touches);
-    } else if (e.touches.length === 1) {
-        startDrag(e.touches[0]);
-    }
+    if (e.touches.length === 2) initialPinchDistance = getPinchDistance(e.touches);
+    else if (e.touches.length === 1) startDrag(e.touches[0]);
 }
 
 function handleTouchMove(e) {
     e.preventDefault();
     if (e.touches.length === 2 && initialPinchDistance) {
         const currentDistance = getPinchDistance(e.touches);
-        // Уменьшенная чувствительность: делим на 300 вместо 100
-        const delta = (currentDistance - initialPinchDistance) / 300;
-        zoom(delta);
+        zoom((currentDistance - initialPinchDistance) / 300);
         initialPinchDistance = currentDistance;
-    } else if (e.touches.length === 1) {
-        drag(e.touches[0]);
-    }
+    } else if (e.touches.length === 1) drag(e.touches[0]);
 }
 
 function getPinchDistance(touches) {
@@ -251,14 +216,16 @@ function getPinchDistance(touches) {
     return Math.sqrt(dx * dx + dy * dy);
 }
 
-// Обновление сетки
+function getGridSize() {
+    if (useCustomGrid.checked) return { rows: parseInt(customRows.value) || 2, cols: parseInt(customCols.value) || 2 };
+    const val = parseInt(gridSize.value) || 2;
+    return { rows: val, cols: val };
+}
+
 function updateGrid() {
     if (!imageLoaded) return;
-    
     const { rows, cols } = getGridSize();
-    
     gridOverlay.innerHTML = '';
-    
     previewSection.classList.add('active');
     
     const containerRect = canvasContainer.getBoundingClientRect();
@@ -267,8 +234,6 @@ function updateGrid() {
     
     gridOverlay.style.width = containerRect.width + 'px';
     gridOverlay.style.height = containerRect.height + 'px';
-    gridOverlay.style.left = '0';
-    gridOverlay.style.top = '0';
     
     for (let i = 1; i < cols; i++) {
         const line = document.createElement('div');
@@ -276,7 +241,6 @@ function updateGrid() {
         line.style.left = (i * cellWidth - 1) + 'px';
         gridOverlay.appendChild(line);
     }
-    
     for (let i = 1; i < rows; i++) {
         const line = document.createElement('div');
         line.className = 'grid-line-h';
@@ -286,118 +250,66 @@ function updateGrid() {
     
     gridPreview.innerHTML = '';
     gridPreview.style.gridTemplateColumns = `repeat(${cols}, 100px)`;
+    updateGridPreviewGap();
 }
 
-// Получение размера сетки
-function getGridSize() {
-    if (useCustomGrid.checked) {
-        return {
-            rows: parseInt(customRows.value) || 2,
-            cols: parseInt(customCols.value) || 2
-        };
-    } else {
-        const val = parseInt(gridSize.value) || 2;
-        return { rows: val, cols: val };
-    }
+function updateGridPreviewGap() { gridPreview.style.gap = currentPadding + 'px'; }
+
+function generateFileName(index) {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = String(now.getFullYear()).slice(-2);
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `part_${index}_${day}${month}${year}${hours}${minutes}.png`;
 }
 
-// Нарезка изображения
 function splitImage() {
     if (!originalImage) return;
-    
     const { rows, cols } = getGridSize();
-    const pieceWidth = 100;
-    const pieceHeight = 100;
-    const padding = 5; // 5px отступы
-    
-    const targetWidth = cols * pieceWidth;
-    const targetHeight = rows * pieceHeight;
+    const pieceWidth = 100, pieceHeight = 100, padding = currentPadding;
+    const targetWidth = cols * pieceWidth, targetHeight = rows * pieceHeight;
     
     const tempCanvas = document.createElement('canvas');
     const tempCtx = tempCanvas.getContext('2d');
-    tempCanvas.width = targetWidth;
-    tempCanvas.height = targetHeight;
-    
+    tempCanvas.width = targetWidth; tempCanvas.height = targetHeight;
     tempCtx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
     
     splitImages = [];
     gridPreview.innerHTML = '';
+    let partIndex = 0;
     
     for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
             const finalCanvas = document.createElement('canvas');
-            finalCanvas.width = pieceWidth;
-            finalCanvas.height = pieceHeight;
+            finalCanvas.width = pieceWidth; finalCanvas.height = pieceHeight;
             const finalCtx = finalCanvas.getContext('2d');
             
-            // Прозрачный фон (не заполняем белым)
-            
-            // Вычисляем отступы
             const topPadding = (row === 0) ? 0 : padding;
             const bottomPadding = (row === rows - 1) ? 0 : padding;
-            
-            // Вырезаем часть из исходного изображения
-            const x = col * pieceWidth;
-            const y = row * pieceHeight;
+            const x = col * pieceWidth, y = row * pieceHeight;
             const sourceHeight = pieceHeight - topPadding - bottomPadding;
             
-            // Рисуем с отступами
-            finalCtx.drawImage(
-                tempCanvas,
-                x, y + topPadding, pieceWidth, sourceHeight,
-                0, topPadding, pieceWidth, sourceHeight
-            );
+            finalCtx.drawImage(tempCanvas, x, y + topPadding, pieceWidth, sourceHeight, 0, topPadding, pieceWidth, sourceHeight);
             
             const dataUrl = finalCanvas.toDataURL('image/png');
-            splitImages.push({
-                dataUrl: dataUrl,
-                name: `part_${row}_${col}.png`,
-                row: row,
-                col: col
-            });
+            splitImages.push({ dataUrl, name: generateFileName(partIndex) });
             
             const img = document.createElement('img');
             img.src = dataUrl;
-            img.alt = `Part ${row}x${col}`;
             gridPreview.appendChild(img);
+            partIndex++;
         }
     }
     
-    downloadZipBtn.disabled = false;
     downloadPngBtn.disabled = false;
-    
+    updateGridPreviewGap();
     previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// Скачивание всех частей в ZIP
-async function downloadAllAsZip() {
-    if (splitImages.length === 0) return;
-    
-    const { rows, cols } = getGridSize();
-    const zip = new JSZip();
-    
-    zip.file("README.txt", 
-        `Image Split Result\n` +
-        `Grid: ${rows} × ${cols}\n` +
-        `Piece size: 100×100 pixels\n` +
-        `Padding: 5px transparent (between parts only)\n` +
-        `Total size: ${cols * 100}×${rows * 100} pixels\n` +
-        `\nFiles are named as: part_ROW_COL.png`
-    );
-    
-    splitImages.forEach((img) => {
-        const base64Data = img.dataUrl.split(',')[1];
-        zip.file(img.name, base64Data, {base64: true});
-    });
-    
-    const content = await zip.generateAsync({type: 'blob'});
-    saveAs(content, `split_image_${rows}x${cols}.zip`);
-}
-
-// Скачивание всех частей как PNG
 async function downloadAllAsPng() {
     if (splitImages.length === 0) return;
-    
     for (let i = 0; i < splitImages.length; i++) {
         const img = splitImages[i];
         const link = document.createElement('a');
@@ -406,21 +318,14 @@ async function downloadAllAsPng() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
-        if (i < splitImages.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 300));
-        }
+        if (i < splitImages.length - 1) await new Promise(resolve => setTimeout(resolve, 300));
     }
 }
 
-// Регистрация Service Worker для PWA
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-            .then(() => console.log('Service Worker registered'))
-            .catch(err => console.error('Service Worker error:', err));
+        navigator.serviceWorker.register('sw.js').catch(err => console.error('SW error:', err));
     });
 }
 
-// Инициализация при загрузке
 document.addEventListener('DOMContentLoaded', init);
