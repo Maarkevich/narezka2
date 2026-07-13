@@ -34,6 +34,7 @@ const customRows = document.getElementById('customRows');
 const customCols = document.getElementById('customCols');
 const useCustomGrid = document.getElementById('useCustomGrid');
 const paddingInput = document.getElementById('paddingInput');
+const paddingDirection = document.getElementById('paddingDirection');
 const offlineIndicator = document.getElementById('offlineIndicator');
 
 // Инициализация
@@ -269,6 +270,8 @@ function splitImage() {
     if (!originalImage) return;
     const { rows, cols } = getGridSize();
     const pieceWidth = 100, pieceHeight = 100, padding = currentPadding;
+    const paddingDir = paddingDirection.value; // 'between', 'top', 'bottom'
+    
     const targetWidth = cols * pieceWidth, targetHeight = rows * pieceHeight;
     
     const tempCanvas = document.createElement('canvas');
@@ -286,8 +289,21 @@ function splitImage() {
             finalCanvas.width = pieceWidth; finalCanvas.height = pieceHeight;
             const finalCtx = finalCanvas.getContext('2d');
             
-            const topPadding = (row === 0) ? 0 : padding;
-            const bottomPadding = (row === rows - 1) ? 0 : padding;
+            // Логика отступов в зависимости от выбранного направления
+            let topPadding = 0;
+            let bottomPadding = 0;
+            
+            if (paddingDir === 'between') {
+                topPadding = (row === 0) ? 0 : padding;
+                bottomPadding = (row === rows - 1) ? 0 : padding;
+            } else if (paddingDir === 'top') {
+                topPadding = padding;
+                bottomPadding = 0;
+            } else if (paddingDir === 'bottom') {
+                topPadding = 0;
+                bottomPadding = padding;
+            }
+            
             const x = col * pieceWidth, y = row * pieceHeight;
             const sourceHeight = pieceHeight - topPadding - bottomPadding;
             

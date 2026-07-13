@@ -99,8 +99,16 @@
             <div class="control-group">
                 <label for="paddingInput">Отступы между частями (пиксели):</label>
                 <input type="number" id="paddingInput" min="0" max="50" step="1" value="5">
+                
+                <label for="paddingDirection" style="margin-top: 15px;">Направление отступа:</label>
+                <select id="paddingDirection">
+                    <option value="between">Между частями (сверху и снизу)</option>
+                    <option value="top">Только сверху</option>
+                    <option value="bottom">Только снизу</option>
+                </select>
+
                 <small style="color: #999; margin-top: 5px; display: block;">
-                    Отступы применяются только между соприкасающимися частями
+                    «Между частями» — отступ добавляется к краям, которые соприкасаются с другими частями.
                 </small>
             </div>
 
