@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4a90d9">
+    <meta name="description" content="Нарезка изображений на части 100x100 пикселей">
+    <title>Image Splitter 100x100</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #4a90d9;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .upload-area {
+            border: 3px dashed #4a90d9;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+            background: #f8f9ff;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            background: #e8eeff;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .upload-area i {
+            font-size: 48px;
+            color: #4a90d9;
+            margin-bottom: 10px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .controls {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #4a90d9;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .preview {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .preview.active {
+            display: block;
+        }
+
+        .preview h2 {
+            margin-bottom: 15px;
+            color: #4a90d9;
+        }
+
+        .original-image {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .grid-preview {
+            display: grid;
+            gap: 2px;
+            background: #ddd;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .grid-preview img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .download-all {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4a90d9;
+        }
+
+        .info strong {
+            color: #1976d2;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-cut"></i> Image Splitter</h1>
+        <p class="subtitle">Нарезка изображений на части 100×100 пикселей</p>
+
+        <div class="info">
+            <strong>💡 Важно:</strong> Все части будут ровно 100×100 пикселей. 
+            Изображение будет автоматически масштабироваться под выбранную сетку.
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>Нажмите или перетащите изображение сюда</p>
+            <p style="font-size: 0.8em; color: #999; margin-top: 10px;">
+                Поддерживаются: JPG, PNG, WebP
+            </p>
+        </div>
+        <input type="file" id="fileInput" accept="image/*">
+
+        <div class="controls" id="controls" style="display: none;">
+            <div class="control-group">
+                <label for="gridSize">Размер сетки:</label>
+                <select id="gridSize">
+                    <option value="2">2 × 2 (4 части)</option>
+                    <option value="3">3 × 3 (9 частей)</option>
+                    <option value="4">4 × 4 (16 частей)</option>
+                    <option value="5">5 × 5 (25 частей)</option>
+                    <option value="6">6 × 6 (36 частей)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="customRows">Или укажите свой размер:</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <input type="number" id="customRows" placeholder="Строки" min="1" max="10" value="2">
+                    <input type="number" id="customCols" placeholder="Столбцы" min="1" max="10" value="2">
+                </div>
+            </div>
+
+            <button class="btn" id="splitBtn">
+                <i class="fas fa-cut"></i> Нарезать изображение
+            </button>
+        </div>
+
+        <div class="preview" id="preview">
+            <h2>Оригинальное изображение:</h2>
+            <img id="originalImg" class="original-image" alt="Original">
+
+            <h2>Результат нарезки:</h2>
+            <div class="grid-preview" id="gridPreview"></div>
+
+            <button class="btn download-all" id="downloadAllBtn">
+                <i class="fas fa-download"></i> Скачать все части (ZIP)
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
