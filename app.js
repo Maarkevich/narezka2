@@ -39,7 +39,6 @@ const offlineIndicator = document.getElementById('offlineIndicator');
 
 function init() {
     setupEventListeners();
-    setupCanvas();
     checkOnlineStatus();
 }
 
@@ -50,23 +49,30 @@ function checkOnlineStatus() {
 window.addEventListener('online', checkOnlineStatus);
 window.addEventListener('offline', checkOnlineStatus);
 
+// ИСПРАВЛЕНО: Вынесено в отдельную функцию, вызывается когда редактор уже видим
 function setupCanvas() {
     const rect = canvasContainer.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
-    updateCanvasTransform();
+    if (rect.width > 0 && rect.height > 0) {
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        updateCanvasTransform();
+    }
 }
 
 function updateCanvasTransform() {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
     if (originalImage) {
         ctx.save();
-        ctx.translate(panX, panY);
+        // 1. Перемещаем начало координат в центр canvas
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        // 2. Применяем зум
         ctx.scale(currentZoom, currentZoom);
-        const x = (canvas.width / currentZoom - originalImage.width) / 2;
-        const y = (canvas.height / currentZoom - originalImage.height) / 2;
-        ctx.drawImage(originalImage, x, y);
+        // 3. Применяем смещение (pan)
+        ctx.translate(panX, panY);
+        // 4. Рисуем изображение, центрируя его относительно (0,0)
+        ctx.drawImage(originalImage, -originalImage.width / 2, -originalImage.height / 2);
         ctx.restore();
     }
 }
@@ -109,12 +115,13 @@ function setupEventListeners() {
         if (previewSection.classList.contains('active')) updateGridPreviewGap();
     });
     
+    // Мышь
     canvas.addEventListener('mousedown', startDrag);
-    canvas.addEventListener('mousemove', drag);
-    canvas.addEventListener('mouseup', endDrag);
-    canvas.addEventListener('mouseleave', endDrag);
+    window.addEventListener('mousemove', drag); // Слушаем window, чтобы не терять драг при выходе за пределы canvas
+    window.addEventListener('mouseup', endDrag);
     canvas.addEventListener('wheel', handleWheel, {passive: false});
     
+    // Тач
     canvas.addEventListener('touchstart', handleTouchStart, {passive: false});
     canvas.addEventListener('touchmove', handleTouchMove, {passive: false});
     canvas.addEventListener('touchend', endDrag);
@@ -129,7 +136,7 @@ function setupEventListeners() {
     
     window.addEventListener('resize', () => {
         setupCanvas();
-        if (originalImage) { updateCanvasTransform(); updateGrid(); }
+        if (originalImage) updateGrid();
     });
 }
 
@@ -142,9 +149,14 @@ function handleFile(file) {
             imageLoaded = true;
             uploadArea.style.display = 'none';
             imageEditor.style.display = 'block';
-            resetView();
-            splitBtn.disabled = false;
-            updateGrid();
+            
+            // ИСПРАВЛЕНО: Ждем отрисовку DOM, затем инициализируем canvas правильного размера
+            requestAnimationFrame(() => {
+                setupCanvas();
+                resetView();
+                splitBtn.disabled = false;
+                updateGrid();
+            });
         };
         originalImage.src = e.target.result;
     };
@@ -158,27 +170,39 @@ function zoom(delta) {
 }
 
 function resetView() {
-    currentZoom = 1; panX = 0; panY = 0;
+    currentZoom = 1; 
+    panX = 0; 
+    panY = 0;
     zoomInput.value = 100;
     updateCanvasTransform();
 }
 
 function startDrag(e) {
     isDragging = true;
-    dragStartX = e.clientX - panX;
-    dragStartY = e.clientY - panY;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
     canvas.style.cursor = 'grabbing';
 }
 
 function drag(e) {
     if (!isDragging) return;
-    e.preventDefault();
-    panX = e.clientX - dragStartX;
-    panY = e.clientY - dragStartY;
+    // e.preventDefault(); // Убрано для window, чтобы не ломать скролл страницы
+    const dx = e.clientX - dragStartX;
+    const dy = e.clientY - dragStartY;
+    
+    // ИСПРАВЛЕНО: Делим на зум, чтобы движение мыши на 1px сдвигало картинку ровно на 1px на экране
+    panX += dx / currentZoom;
+    panY += dy / currentZoom;
+    
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
     updateCanvasTransform();
 }
 
-function endDrag() { isDragging = false; canvas.style.cursor = 'move'; }
+function endDrag() { 
+    isDragging = false; 
+    canvas.style.cursor = 'move'; 
+}
 
 function handleWheel(e) {
     e.preventDefault();
@@ -187,8 +211,11 @@ function handleWheel(e) {
 
 let initialPinchDistance = null;
 function handleTouchStart(e) {
-    if (e.touches.length === 2) initialPinchDistance = getPinchDistance(e.touches);
-    else if (e.touches.length === 1) startDrag(e.touches[0]);
+    if (e.touches.length === 2) {
+        initialPinchDistance = getPinchDistance(e.touches);
+    } else if (e.touches.length === 1) {
+        startDrag(e.touches[0]);
+    }
 }
 
 function handleTouchMove(e) {
@@ -197,7 +224,16 @@ function handleTouchMove(e) {
         const currentDistance = getPinchDistance(e.touches);
         zoom((currentDistance - initialPinchDistance) / 300);
         initialPinchDistance = currentDistance;
-    } else if (e.touches.length === 1) drag(e.touches[0]);
+    } else if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        const dx = touch.clientX - dragStartX;
+        const dy = touch.clientY - dragStartY;
+        panX += dx / currentZoom;
+        panY += dy / currentZoom;
+        dragStartX = touch.clientX;
+        dragStartY = touch.clientY;
+        updateCanvasTransform();
+    }
 }
 
 function getPinchDistance(touches) {
@@ -282,33 +318,23 @@ function splitImage() {
             finalCanvas.height = pieceHeight;
             const finalCtx = finalCanvas.getContext('2d');
             
-            let topPad = 0;
-            let bottomPad = 0;
+            let topPad = 0, bottomPad = 0;
             
             if (paddingDir === 'between') {
                 if (row === 0) { topPad = 0; bottomPad = padding; }
                 else if (row === rows - 1) { topPad = padding; bottomPad = 0; }
                 else { topPad = padding; bottomPad = padding; }
             } else if (paddingDir === 'top') {
-                topPad = padding;
-                bottomPad = 0;
+                topPad = padding; bottomPad = 0;
             } else if (paddingDir === 'bottom') {
-                topPad = 0;
-                bottomPad = padding;
+                topPad = 0; bottomPad = padding;
             }
             
             const x = col * pieceWidth;
             const y = row * pieceHeight;
-            
-            // ИСПРАВЛЕНО: Высота беремой области уменьшается на отступы, 
-            // а рисуется она со сдвигом (topPad), оставляя край прозрачным.
             const srcHeight = Math.max(0, pieceHeight - topPad - bottomPad);
             
-            finalCtx.drawImage(
-                tempCanvas, 
-                x, y, pieceWidth, srcHeight,       // Source: откуда берем (сдвиг края обрезки)
-                0, topPad, pieceWidth, srcHeight   // Dest: куда рисуем (сдвиг внутри кусочка)
-            );
+            finalCtx.drawImage(tempCanvas, x, y, pieceWidth, srcHeight, 0, topPad, pieceWidth, srcHeight);
             
             const dataUrl = finalCanvas.toDataURL('image/png');
             splitImages.push({ dataUrl, name: generateFileName(partIndex) });

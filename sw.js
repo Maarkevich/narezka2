@@ -1,4 +1,4 @@
-const CACHE_NAME = 'image-splitter-v6-github';
+const CACHE_NAME = 'image-splitter-v7-final';
 const urlsToCache = [
     './',
     './index.html',
