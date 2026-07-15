@@ -61,6 +61,19 @@
                     <canvas id="editCanvas"></canvas>
                     <div class="grid-overlay" id="gridOverlay"></div>
                 </div>
+                
+                <!-- ВРАЩЕНИЕ ПЕРЕНЕСЕНО СЮДА -->
+                <div class="rotation-panel">
+                    <label class="rotation-label">Вращение:</label>
+                    <div class="rotation-controls">
+                        <button class="tool-btn-small" id="rotateLeft90" title="Повернуть на -90°">-90°</button>
+                        <input type="range" id="rotationSlider" min="-180" max="180" value="0" step="1">
+                        <button class="tool-btn-small" id="rotateRight90" title="Повернуть на +90°">+90°</button>
+                        <button class="tool-btn-small" id="resetRotation" title="Сбросить вращение">0°</button>
+                    </div>
+                    <span id="rotationValue" class="rotation-value">0°</span>
+                </div>
+                
                 <div class="editor-hint">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;"><rect x="6" y="3" width="12" height="18" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
                     Перетаскивайте для перемещения • Колесико/щипок для масштабирования
@@ -105,25 +118,21 @@
                 </select>
             </div>
 
-            <div class="control-group">
-                <label>Вращение:</label>
-                <div class="rotation-controls">
-                    <button class="tool-btn-small" id="rotateLeft90" title="Повернуть на -90°">-90°</button>
-                    <input type="range" id="rotationSlider" min="-180" max="180" value="0" step="1">
-                    <button class="tool-btn-small" id="rotateRight90" title="Повернуть на +90°">+90°</button>
-                    <button class="tool-btn-small" id="resetRotation" title="Сбросить вращение">0°</button>
+            <!-- СГЛАЖИВАНИЕ С НОВЫМ ДИЗАЙНОМ -->
+            <div class="control-group smoothing-group">
+                <div class="smoothing-header">
+                    <span class="smoothing-title">Сглаживание (антиалиасинг)</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="smoothingToggle" checked>
+                        <span class="slider"></span>
+                    </label>
                 </div>
-                <span id="rotationValue" class="rotation-value">0°</span>
-            </div>
-
-            <div class="control-group">
-                <label class="toggle-switch">
-                    <input type="checkbox" id="smoothingToggle" checked>
-                    <span class="slider"></span>
-                    <span class="label-text">Сглаживание (антиалиасинг)</span>
-                </label>
-                <small style="color: #999; margin-top: 5px; display: block;">
-                    Выключите для чётких пикселей без размытия
+                <div class="smoothing-status" id="smoothingStatus">
+                    <span class="status-indicator on">✓ Включено</span>
+                    <span class="status-indicator off" style="display: none;">✗ Выключено</span>
+                </div>
+                <small style="color: #999; margin-top: 8px; display: block;">
+                    Включите для плавных краёв, выключите для чётких пикселей
                 </small>
             </div>
 

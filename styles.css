@@ -152,7 +152,6 @@ h1 svg { width: 1em; height: 1em; }
 
 .zoom-percent { color: #4a90d9; font-weight: 600; font-size: 14px; }
 
-/* КВАДРАТНЫЙ РЕДАКТОР */
 .canvas-container {
     position: relative;
     width: 100%;
@@ -188,6 +187,86 @@ h1 svg { width: 1em; height: 1em; }
 .grid-line-h {
     position: absolute; left: 0; right: 0; height: 2px;
     background: repeating-linear-gradient(to right, rgba(74, 144, 217, 0.9) 0px, rgba(74, 144, 217, 0.9) 10px, transparent 10px, transparent 20px);
+}
+
+/* ПАНЕЛЬ ВРАЩЕНИЯ ПОД РЕДАКТОРОМ */
+.rotation-panel {
+    background: white;
+    padding: 20px;
+    border-top: 1px solid #ddd;
+}
+
+.rotation-label {
+    display: block;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 12px;
+    font-size: 1.05em;
+}
+
+.rotation-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.tool-btn-small {
+    background: #4a90d9;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.tool-btn-small:hover {
+    background: #667eea;
+    transform: scale(1.05);
+}
+
+#rotationSlider {
+    flex: 1;
+    height: 8px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #ddd;
+    border-radius: 4px;
+    outline: none;
+}
+
+#rotationSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    background: #4a90d9;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+#rotationSlider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    background: #4a90d9;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.rotation-value {
+    display: block;
+    text-align: center;
+    font-weight: 700;
+    color: #4a90d9;
+    font-size: 1.3em;
+    margin-top: 5px;
 }
 
 .editor-hint {
@@ -231,109 +310,94 @@ select, input[type="number"] {
 
 select:focus, input:focus { outline: none; border-color: #4a90d9; }
 
-/* Вращение */
-.rotation-controls {
+/* НОВЫЙ ДИЗАЙН ТУМБЛЕРА СГЛАЖИВАНИЯ */
+.smoothing-group {
+    background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+    border: 2px solid #4a90d9;
+}
+
+.smoothing-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 10px;
+    gap: 15px;
     margin-bottom: 10px;
 }
 
-.tool-btn-small {
-    background: #4a90d9;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.2s;
-    white-space: nowrap;
-}
-
-.tool-btn-small:hover {
-    background: #667eea;
-    transform: scale(1.05);
-}
-
-#rotationSlider {
+.smoothing-title {
+    font-weight: 700;
+    color: #333;
+    font-size: 1.05em;
     flex: 1;
-    height: 6px;
-    -webkit-appearance: none;
-    appearance: none;
-    background: #ddd;
-    border-radius: 3px;
-    outline: none;
 }
 
-#rotationSlider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    background: #4a90d9;
-    border-radius: 50%;
-    cursor: pointer;
-}
-
-#rotationSlider::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    background: #4a90d9;
-    border-radius: 50%;
-    cursor: pointer;
-    border: none;
-}
-
-.rotation-value {
-    display: block;
-    text-align: center;
-    font-weight: 600;
-    color: #4a90d9;
-    font-size: 1.1em;
-}
-
-/* Toggle switch */
 .toggle-switch {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    user-select: none;
-}
-
-.toggle-switch input { display: none; }
-
-.toggle-switch .slider {
     position: relative;
-    width: 50px;
-    height: 26px;
-    background: #ccc;
-    border-radius: 26px;
-    transition: 0.3s;
+    display: inline-block;
+    width: 60px;
+    height: 32px;
     flex-shrink: 0;
 }
 
-.toggle-switch .slider::before {
-    content: '';
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-switch .slider {
     position: absolute;
-    width: 22px;
-    height: 22px;
-    left: 2px;
-    top: 2px;
-    background: white;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 32px;
+}
+
+.toggle-switch .slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.4s;
     border-radius: 50%;
-    transition: 0.3s;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-.toggle-switch input:checked + .slider { background: #4a90d9; }
-.toggle-switch input:checked + .slider::before { transform: translateX(24px); }
+.toggle-switch input:checked + .slider {
+    background-color: #4a90d9;
+}
 
-.toggle-switch .label-text {
+.toggle-switch input:checked + .slider:before {
+    transform: translateX(28px);
+}
+
+.smoothing-status {
+    margin-top: 8px;
+}
+
+.status-indicator {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.9em;
     font-weight: 600;
-    color: #555;
+}
+
+.status-indicator.on {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-indicator.off {
+    background: #f8d7da;
+    color: #721c24;
 }
 
 /* Кнопки */
@@ -383,7 +447,6 @@ select:focus, input:focus { outline: none; border-color: #4a90d9; }
     font-size: 0.9em;
 }
 
-/* КВАДРАТНОЕ ПРЕВЬЮ */
 .grid-preview {
     display: grid;
     gap: 8px;
@@ -460,4 +523,11 @@ select:focus, input:focus { outline: none; border-color: #4a90d9; }
     h1 { font-size: 1.5em; }
     .upload-area { padding: 30px 20px; min-height: 200px; }
     .part-wrapper img { width: 80px; height: 80px; }
+    .rotation-controls {
+        flex-wrap: wrap;
+    }
+    .tool-btn-small {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
 }
