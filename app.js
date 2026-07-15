@@ -4,11 +4,13 @@ let splitImages = [];
 let currentZoom = 1;
 let panX = 0;
 let panY = 0;
+let rotation = 0; // в градусах
 let isDragging = false;
 let dragStartX = 0;
 let dragStartY = 0;
 let imageLoaded = false;
 let currentPadding = 5;
+let smoothingEnabled = true;
 
 // Canvas и контекст
 const canvas = document.getElementById('editCanvas');
@@ -35,6 +37,12 @@ const customCols = document.getElementById('customCols');
 const useCustomGrid = document.getElementById('useCustomGrid');
 const paddingInput = document.getElementById('paddingInput');
 const paddingDirection = document.getElementById('paddingDirection');
+const rotationSlider = document.getElementById('rotationSlider');
+const rotationValue = document.getElementById('rotationValue');
+const rotateLeft90Btn = document.getElementById('rotateLeft90');
+const rotateRight90Btn = document.getElementById('rotateRight90');
+const resetRotationBtn = document.getElementById('resetRotation');
+const smoothingToggle = document.getElementById('smoothingToggle');
 const offlineIndicator = document.getElementById('offlineIndicator');
 
 function init() {
@@ -66,6 +74,7 @@ function updateCanvasTransform() {
         ctx.save();
         ctx.translate(canvas.width / 2, canvas.height / 2);
         ctx.scale(currentZoom, currentZoom);
+        ctx.rotate(rotation * Math.PI / 180);
         ctx.translate(panX, panY);
         ctx.drawImage(originalImage, -originalImage.width / 2, -originalImage.height / 2);
         ctx.restore();
@@ -110,11 +119,48 @@ function setupEventListeners() {
         if (previewSection.classList.contains('active')) updateGridPreviewGap();
     });
     
+    // Вращение
+    rotationSlider.addEventListener('input', (e) => {
+        rotation = parseInt(e.target.value);
+        rotationValue.textContent = rotation + '°';
+        updateCanvasTransform();
+    });
+    
+    rotateLeft90Btn.addEventListener('click', () => {
+        rotation = (rotation - 90 + 360) % 360;
+        if (rotation > 180) rotation -= 360;
+        rotationSlider.value = rotation;
+        rotationValue.textContent = rotation + '°';
+        updateCanvasTransform();
+    });
+    
+    rotateRight90Btn.addEventListener('click', () => {
+        rotation = (rotation + 90) % 360;
+        if (rotation > 180) rotation -= 360;
+        rotationSlider.value = rotation;
+        rotationValue.textContent = rotation + '°';
+        updateCanvasTransform();
+    });
+    
+    resetRotationBtn.addEventListener('click', () => {
+        rotation = 0;
+        rotationSlider.value = 0;
+        rotationValue.textContent = '0°';
+        updateCanvasTransform();
+    });
+    
+    // Сглаживание
+    smoothingToggle.addEventListener('change', (e) => {
+        smoothingEnabled = e.target.checked;
+    });
+    
+    // Мышь
     canvas.addEventListener('mousedown', startDrag);
     window.addEventListener('mousemove', drag);
     window.addEventListener('mouseup', endDrag);
     canvas.addEventListener('wheel', handleWheel, {passive: false});
     
+    // Тач
     canvas.addEventListener('touchstart', handleTouchStart, {passive: false});
     canvas.addEventListener('touchmove', handleTouchMove, {passive: false});
     canvas.addEventListener('touchend', endDrag);
@@ -284,25 +330,29 @@ function generateFileName(index) {
 function splitImage() {
     if (!originalImage) return;
     const { rows, cols } = getGridSize();
-    const pieceWidth = 100, pieceHeight = 100;
+    const pieceSize = 100;
     const padding = currentPadding;
     const paddingDir = paddingDirection.value;
     
-    const targetWidth = cols * pieceWidth;
-    const targetHeight = rows * pieceHeight;
+    const targetSize = cols * pieceSize; // квадратный captureCanvas
     
-    // 1. ИСПРАВЛЕНО: Создаем canvas, который идеально повторяет вид редактора (с зумом и сдвигом), но в итоговом разрешении
+    // Создаём captureCanvas с теми же пропорциями что и редактор (квадрат)
     const captureCanvas = document.createElement('canvas');
-    captureCanvas.width = targetWidth;
-    captureCanvas.height = targetHeight;
+    captureCanvas.width = targetSize;
+    captureCanvas.height = targetSize;
     const cCtx = captureCanvas.getContext('2d');
     
-    cCtx.translate(targetWidth / 2, targetHeight / 2);
+    // Масштабируем panX/panY пропорционально
+    const scale = targetSize / canvas.width;
+    
+    // Применяем ТУ ЖЕ трансформацию что и в редакторе
+    cCtx.translate(targetSize / 2, targetSize / 2);
     cCtx.scale(currentZoom, currentZoom);
-    cCtx.translate(panX, panY);
+    cCtx.rotate(rotation * Math.PI / 180);
+    cCtx.translate(panX * scale, panY * scale);
     cCtx.drawImage(originalImage, -originalImage.width / 2, -originalImage.height / 2);
     
-    // 2. Нарезаем уже трансформированное изображение
+    // Нарезаем
     splitImages = [];
     gridPreview.innerHTML = '';
     let partIndex = 0;
@@ -310,9 +360,13 @@ function splitImage() {
     for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
             const finalCanvas = document.createElement('canvas');
-            finalCanvas.width = pieceWidth;
-            finalCanvas.height = pieceHeight;
+            finalCanvas.width = pieceSize;
+            finalCanvas.height = pieceSize;
             const finalCtx = finalCanvas.getContext('2d');
+            
+            // Применяем сглаживание
+            finalCtx.imageSmoothingEnabled = smoothingEnabled;
+            finalCtx.imageSmoothingQuality = 'high';
             
             let topPad = 0, bottomPad = 0;
             
@@ -326,19 +380,33 @@ function splitImage() {
                 topPad = 0; bottomPad = padding;
             }
             
-            const x = col * pieceWidth;
-            const y = row * pieceHeight;
-            const srcHeight = Math.max(0, pieceHeight - topPad - bottomPad);
+            const x = col * pieceSize;
+            const y = row * pieceSize;
+            const srcHeight = Math.max(0, pieceSize - topPad - bottomPad);
             
-            // Вырезаем из captureCanvas, который уже содержит зум и сдвиг!
-            finalCtx.drawImage(captureCanvas, x, y, pieceWidth, srcHeight, 0, topPad, pieceWidth, srcHeight);
+            finalCtx.drawImage(captureCanvas, x, y, pieceSize, srcHeight, 0, topPad, pieceSize, srcHeight);
             
             const dataUrl = finalCanvas.toDataURL('image/png');
-            splitImages.push({ dataUrl, name: generateFileName(partIndex) });
+            splitImages.push({ dataUrl, name: generateFileName(partIndex), index: partIndex });
+            
+            // Создаём wrapper с чекбоксом
+            const wrapper = document.createElement('div');
+            wrapper.className = 'part-wrapper';
             
             const img = document.createElement('img');
             img.src = dataUrl;
-            gridPreview.appendChild(img);
+            img.alt = `Часть ${partIndex}`;
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = true;
+            checkbox.dataset.index = partIndex;
+            checkbox.title = `Часть ${partIndex}`;
+            
+            wrapper.appendChild(img);
+            wrapper.appendChild(checkbox);
+            gridPreview.appendChild(wrapper);
+            
             partIndex++;
         }
     }
@@ -351,11 +419,27 @@ function splitImage() {
 async function downloadAllAsPng() {
     if (splitImages.length === 0) return;
 
-    // ИСПРАВЛЕНО: Нативный способ для iOS 15+ (открывает меню "Поделиться" -> "Сохранить в Файлы")
+    // Получаем выбранные части
+    const checkboxes = gridPreview.querySelectorAll('input[type="checkbox"]');
+    const selectedIndices = new Set();
+    checkboxes.forEach(cb => {
+        if (cb.checked) {
+            selectedIndices.add(parseInt(cb.dataset.index));
+        }
+    });
+
+    if (selectedIndices.size === 0) {
+        alert('Пожалуйста, выберите хотя бы одну часть для скачивания!');
+        return;
+    }
+
+    const selectedImages = splitImages.filter(img => selectedIndices.has(img.index));
+
+    // iOS Share API
     if (navigator.share && navigator.canShare) {
         try {
             const files = [];
-            for (const img of splitImages) {
+            for (const img of selectedImages) {
                 const byteString = atob(img.dataUrl.split(',')[1]);
                 const mimeString = img.dataUrl.split(',')[0].split(':')[1].split(';')[0];
                 const ab = new ArrayBuffer(byteString.length);
@@ -371,24 +455,24 @@ async function downloadAllAsPng() {
                     files: files,
                     title: 'Нарезанные изображения',
                 });
-                return; // Успешно сохранено через нативное меню iOS
+                return;
             }
         } catch (err) {
             console.log('Share API failed, falling back to standard download', err);
         }
     }
 
-    // Fallback для десктопа и старых браузеров
+    // Fallback для десктопа
     alert('Нажмите "Разрешить", если браузер спросит разрешение на скачивание нескольких файлов.');
-    for (let i = 0; i < splitImages.length; i++) {
-        const img = splitImages[i];
+    for (let i = 0; i < selectedImages.length; i++) {
+        const img = selectedImages[i];
         const link = document.createElement('a');
         link.download = img.name;
         link.href = img.dataUrl;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        if (i < splitImages.length - 1) await new Promise(resolve => setTimeout(resolve, 500));
+        if (i < selectedImages.length - 1) await new Promise(resolve => setTimeout(resolve, 500));
     }
 }
 

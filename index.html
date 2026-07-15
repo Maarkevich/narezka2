@@ -20,16 +20,14 @@
 
         <div class="info">
             <strong>💡 Важно:</strong> Все части будут ровно 100×100 пикселей. 
-            Изображение можно перемещать и масштабировать. Отступы настраиваются.
+            Изображение можно перемещать, масштабировать и вращать. Отступы настраиваются.
         </div>
 
-        <!-- Offline indicator -->
         <div class="offline-indicator" id="offlineIndicator" style="display: none;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
             Оффлайн режим
         </div>
 
-        <!-- Область загрузки -->
         <div class="upload-section">
             <div class="upload-area" id="uploadArea">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -40,7 +38,6 @@
             </div>
             <input type="file" id="fileInput" accept="image/*">
 
-            <!-- Редактор изображения -->
             <div class="image-editor" id="imageEditor" style="display: none;">
                 <div class="editor-toolbar">
                     <button class="tool-btn" id="zoomOutBtn" title="Уменьшить на 5%">
@@ -71,11 +68,11 @@
             </div>
         </div>
 
-        <!-- Элементы управления -->
         <div class="controls" id="controls">
             <div class="control-group">
                 <label for="gridSize">Размер сетки:</label>
                 <select id="gridSize">
+                    <option value="1">1 × 1 (1 часть — преобразовать в 100×100)</option>
                     <option value="2">2 × 2 (4 части)</option>
                     <option value="3">3 × 3 (9 частей)</option>
                     <option value="4">4 × 4 (16 частей)</option>
@@ -85,7 +82,7 @@
             </div>
 
             <div class="control-group">
-                <label for="customGrid">Или укажите свой размер:</label>
+                <label>Или укажите свой размер:</label>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <input type="number" id="customRows" placeholder="Строки" min="1" max="10" value="2">
                     <input type="number" id="customCols" placeholder="Столбцы" min="1" max="10" value="2">
@@ -106,9 +103,27 @@
                     <option value="top">Только сверху</option>
                     <option value="bottom">Только снизу</option>
                 </select>
+            </div>
 
+            <div class="control-group">
+                <label>Вращение:</label>
+                <div class="rotation-controls">
+                    <button class="tool-btn-small" id="rotateLeft90" title="Повернуть на -90°">-90°</button>
+                    <input type="range" id="rotationSlider" min="-180" max="180" value="0" step="1">
+                    <button class="tool-btn-small" id="rotateRight90" title="Повернуть на +90°">+90°</button>
+                    <button class="tool-btn-small" id="resetRotation" title="Сбросить вращение">0°</button>
+                </div>
+                <span id="rotationValue" class="rotation-value">0°</span>
+            </div>
+
+            <div class="control-group">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="smoothingToggle" checked>
+                    <span class="slider"></span>
+                    <span class="label-text">Сглаживание (антиалиасинг)</span>
+                </label>
                 <small style="color: #999; margin-top: 5px; display: block;">
-                    «Между частями» — отступ добавляется к краям, которые соприкасаются с другими частями.
+                    Выключите для чётких пикселей без размытия
                 </small>
             </div>
 
@@ -118,18 +133,20 @@
             </button>
         </div>
 
-        <!-- Превью результатов -->
         <div class="preview-section" id="previewSection">
             <h2>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                 Результат нарезки:
             </h2>
+            <div class="preview-hint">
+                Отметьте галочками части, которые нужно скачать
+            </div>
             <div class="grid-preview" id="gridPreview"></div>
             
             <div class="download-buttons">
                 <button class="btn download-png" id="downloadPngBtn" disabled>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Скачать все части (PNG)
+                    Скачать выбранные части (PNG)
                 </button>
             </div>
         </div>

@@ -13,7 +13,7 @@ body {
 }
 
 .container {
-    max-width: 1200px; /* Увеличено для ПК */
+    max-width: 1200px;
     margin: 0 auto;
     background: white;
     border-radius: 20px;
@@ -152,23 +152,30 @@ h1 svg { width: 1em; height: 1em; }
 
 .zoom-percent { color: #4a90d9; font-weight: 600; font-size: 14px; }
 
-/* ИСПРАВЛЕНО: Адаптивная высота canvas */
+/* КВАДРАТНЫЙ РЕДАКТОР */
 .canvas-container {
     position: relative;
     width: 100%;
-    height: 50vh; /* Занимает 50% высоты экрана */
-    min-height: 300px;
-    max-height: 600px;
+    max-width: 600px;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto;
     background: #2d2d2d;
     overflow: hidden;
     cursor: move;
 }
 
-#editCanvas { display: block; image-rendering: high-quality; }
+#editCanvas { 
+    display: block; 
+    width: 100%;
+    height: 100%;
+    image-rendering: high-quality; 
+}
 
 .grid-overlay {
     position: absolute;
     top: 0; left: 0;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
     border: 2px solid rgba(74, 144, 217, 0.8);
 }
@@ -192,14 +199,14 @@ h1 svg { width: 1em; height: 1em; }
     border-top: 1px solid #ddd;
 }
 
-/* ИСПРАВЛЕНО: Адаптивная сетка контролов */
+/* Элементы управления */
 .controls {
     background: #f8f9ff;
     padding: 20px;
     border-radius: 15px;
     margin-bottom: 20px;
     display: grid;
-    grid-template-columns: 1fr; /* Мобильный: 1 колонка */
+    grid-template-columns: 1fr;
     gap: 15px;
 }
 
@@ -224,6 +231,112 @@ select, input[type="number"] {
 
 select:focus, input:focus { outline: none; border-color: #4a90d9; }
 
+/* Вращение */
+.rotation-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.tool-btn-small {
+    background: #4a90d9;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.tool-btn-small:hover {
+    background: #667eea;
+    transform: scale(1.05);
+}
+
+#rotationSlider {
+    flex: 1;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #ddd;
+    border-radius: 3px;
+    outline: none;
+}
+
+#rotationSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #4a90d9;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+#rotationSlider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #4a90d9;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+.rotation-value {
+    display: block;
+    text-align: center;
+    font-weight: 600;
+    color: #4a90d9;
+    font-size: 1.1em;
+}
+
+/* Toggle switch */
+.toggle-switch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.toggle-switch input { display: none; }
+
+.toggle-switch .slider {
+    position: relative;
+    width: 50px;
+    height: 26px;
+    background: #ccc;
+    border-radius: 26px;
+    transition: 0.3s;
+    flex-shrink: 0;
+}
+
+.toggle-switch .slider::before {
+    content: '';
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    left: 2px;
+    top: 2px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.toggle-switch input:checked + .slider { background: #4a90d9; }
+.toggle-switch input:checked + .slider::before { transform: translateX(24px); }
+
+.toggle-switch .label-text {
+    font-weight: 600;
+    color: #555;
+}
+
+/* Кнопки */
 .btn {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -246,11 +359,12 @@ select:focus, input:focus { outline: none; border-color: #4a90d9; }
 .btn:active:not(:disabled) { transform: translateY(0); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* Превью */
 .preview-section { display: none; }
 .preview-section.active { display: block; }
 
 .preview-section h2 {
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     color: #4a90d9;
     font-size: 1.5em;
     display: flex;
@@ -259,24 +373,57 @@ select:focus, input:focus { outline: none; border-color: #4a90d9; }
 }
 .preview-section h2 svg { width: 1em; height: 1em; }
 
+.preview-hint {
+    background: #fff3cd;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border-left: 4px solid #ffc107;
+    color: #856404;
+    font-size: 0.9em;
+}
+
+/* КВАДРАТНОЕ ПРЕВЬЮ */
 .grid-preview {
     display: grid;
-    gap: 2px;
-    background: #ddd;
+    gap: 8px;
+    background: #f0f0f0;
     border: 2px solid #ddd;
     border-radius: 10px;
-    overflow: hidden;
+    padding: 10px;
     margin-bottom: 20px;
-    padding: 2px;
     justify-content: center;
 }
 
-.grid-preview img {
+.part-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: white;
+    border-radius: 8px;
+    padding: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s;
+}
+
+.part-wrapper:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+.part-wrapper img {
     width: 100px;
     height: 100px;
-    object-fit: cover;
     display: block;
-    background: transparent;
+    border-radius: 4px;
+}
+
+.part-wrapper input[type="checkbox"] {
+    margin-top: 6px;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #4a90d9;
 }
 
 .download-buttons {
@@ -289,37 +436,28 @@ select:focus, input:focus { outline: none; border-color: #4a90d9; }
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
-/* --- АДАПТИВНОСТЬ --- */
-
-/* Планшет (от 768px) */
+/* Адаптивность */
 @media (min-width: 768px) {
     .controls {
-        grid-template-columns: repeat(2, 1fr); /* 2 колонки */
+        grid-template-columns: repeat(2, 1fr);
     }
     .controls .btn {
-        grid-column: 1 / -1; /* Кнопка на всю ширину */
+        grid-column: 1 / -1;
     }
     .download-buttons {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
-/* Компьютер (от 1024px) */
 @media (min-width: 1024px) {
     .controls {
-        grid-template-columns: repeat(3, 1fr); /* 3 колонки */
-    }
-    .grid-preview img {
-        width: 100px;
-        height: 100px;
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
-/* Маленькие мобильные (до 480px) */
 @media (max-width: 480px) {
     .container { padding: 15px; }
     h1 { font-size: 1.5em; }
     .upload-area { padding: 30px 20px; min-height: 200px; }
-    .canvas-container { min-height: 250px; }
-    .grid-preview img { width: 60px; height: 60px; }
+    .part-wrapper img { width: 80px; height: 80px; }
 }
