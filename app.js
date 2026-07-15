@@ -37,7 +37,6 @@ const paddingInput = document.getElementById('paddingInput');
 const paddingDirection = document.getElementById('paddingDirection');
 const offlineIndicator = document.getElementById('offlineIndicator');
 
-// Инициализация
 function init() {
     setupEventListeners();
     setupCanvas();
@@ -45,11 +44,7 @@ function init() {
 }
 
 function checkOnlineStatus() {
-    if (!navigator.onLine) {
-        offlineIndicator.style.display = 'flex';
-    } else {
-        offlineIndicator.style.display = 'none';
-    }
+    offlineIndicator.style.display = navigator.onLine ? 'none' : 'flex';
 }
 
 window.addEventListener('online', checkOnlineStatus);
@@ -65,15 +60,12 @@ function setupCanvas() {
 function updateCanvasTransform() {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
     if (originalImage) {
         ctx.save();
         ctx.translate(panX, panY);
         ctx.scale(currentZoom, currentZoom);
-        
         const x = (canvas.width / currentZoom - originalImage.width) / 2;
         const y = (canvas.height / currentZoom - originalImage.height) / 2;
-        
         ctx.drawImage(originalImage, x, y);
         ctx.restore();
     }
@@ -107,7 +99,6 @@ function setupEventListeners() {
         currentZoom = value / 100;
         updateCanvasTransform();
     });
-    
     zoomInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') e.target.blur(); });
     
     paddingInput.addEventListener('input', (e) => {
@@ -144,7 +135,6 @@ function setupEventListeners() {
 
 function handleFile(file) {
     if (!file.type.startsWith('image/')) { alert('Пожалуйста, загрузите изображение!'); return; }
-    
     const reader = new FileReader();
     reader.onload = (e) => {
         originalImage = new Image();
@@ -162,8 +152,7 @@ function handleFile(file) {
 }
 
 function zoom(delta) {
-    const newZoom = Math.max(0.1, Math.min(5, currentZoom + delta));
-    currentZoom = newZoom;
+    currentZoom = Math.max(0.1, Math.min(5, currentZoom + delta));
     zoomInput.value = Math.round(currentZoom * 100);
     updateCanvasTransform();
 }
@@ -269,14 +258,17 @@ function generateFileName(index) {
 function splitImage() {
     if (!originalImage) return;
     const { rows, cols } = getGridSize();
-    const pieceWidth = 100, pieceHeight = 100, padding = currentPadding;
+    const pieceWidth = 100, pieceHeight = 100;
+    const padding = currentPadding;
     const paddingDir = paddingDirection.value;
     
-    const targetWidth = cols * pieceWidth, targetHeight = rows * pieceHeight;
+    const targetWidth = cols * pieceWidth;
+    const targetHeight = rows * pieceHeight;
     
     const tempCanvas = document.createElement('canvas');
     const tempCtx = tempCanvas.getContext('2d');
-    tempCanvas.width = targetWidth; tempCanvas.height = targetHeight;
+    tempCanvas.width = targetWidth;
+    tempCanvas.height = targetHeight;
     tempCtx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
     
     splitImages = [];
@@ -286,28 +278,37 @@ function splitImage() {
     for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
             const finalCanvas = document.createElement('canvas');
-            finalCanvas.width = pieceWidth; finalCanvas.height = pieceHeight;
+            finalCanvas.width = pieceWidth;
+            finalCanvas.height = pieceHeight;
             const finalCtx = finalCanvas.getContext('2d');
             
-            let topPadding = 0;
-            let bottomPadding = 0;
+            let topPad = 0;
+            let bottomPad = 0;
             
             if (paddingDir === 'between') {
-                topPadding = (row === 0) ? 0 : padding;
-                bottomPadding = (row === rows - 1) ? 0 : padding;
+                if (row === 0) { topPad = 0; bottomPad = padding; }
+                else if (row === rows - 1) { topPad = padding; bottomPad = 0; }
+                else { topPad = padding; bottomPad = padding; }
             } else if (paddingDir === 'top') {
-                topPadding = padding;
-                bottomPadding = 0;
+                topPad = padding;
+                bottomPad = 0;
             } else if (paddingDir === 'bottom') {
-                topPadding = 0;
-                bottomPadding = padding;
+                topPad = 0;
+                bottomPad = padding;
             }
             
-            const x = col * pieceWidth, y = row * pieceHeight;
-            const sourceHeight = pieceHeight - topPadding - bottomPadding;
+            const x = col * pieceWidth;
+            const y = row * pieceHeight;
             
-            // ИСПРАВЛЕНО: берем пиксели начиная с y (не y + topPadding!)
-            finalCtx.drawImage(tempCanvas, x, y, pieceWidth, sourceHeight, 0, topPadding, pieceWidth, sourceHeight);
+            // ИСПРАВЛЕНО: Высота беремой области уменьшается на отступы, 
+            // а рисуется она со сдвигом (topPad), оставляя край прозрачным.
+            const srcHeight = Math.max(0, pieceHeight - topPad - bottomPad);
+            
+            finalCtx.drawImage(
+                tempCanvas, 
+                x, y, pieceWidth, srcHeight,       // Source: откуда берем (сдвиг края обрезки)
+                0, topPad, pieceWidth, srcHeight   // Dest: куда рисуем (сдвиг внутри кусочка)
+            );
             
             const dataUrl = finalCanvas.toDataURL('image/png');
             splitImages.push({ dataUrl, name: generateFileName(partIndex) });
@@ -340,7 +341,7 @@ async function downloadAllAsPng() {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(err => console.error('SW error:', err));
+        navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW error:', err));
     });
 }
 
