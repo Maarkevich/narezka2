@@ -49,7 +49,6 @@ function checkOnlineStatus() {
 window.addEventListener('online', checkOnlineStatus);
 window.addEventListener('offline', checkOnlineStatus);
 
-// ИСПРАВЛЕНО: Вынесено в отдельную функцию, вызывается когда редактор уже видим
 function setupCanvas() {
     const rect = canvasContainer.getBoundingClientRect();
     if (rect.width > 0 && rect.height > 0) {
@@ -65,13 +64,9 @@ function updateCanvasTransform() {
     
     if (originalImage) {
         ctx.save();
-        // 1. Перемещаем начало координат в центр canvas
         ctx.translate(canvas.width / 2, canvas.height / 2);
-        // 2. Применяем зум
         ctx.scale(currentZoom, currentZoom);
-        // 3. Применяем смещение (pan)
         ctx.translate(panX, panY);
-        // 4. Рисуем изображение, центрируя его относительно (0,0)
         ctx.drawImage(originalImage, -originalImage.width / 2, -originalImage.height / 2);
         ctx.restore();
     }
@@ -115,13 +110,11 @@ function setupEventListeners() {
         if (previewSection.classList.contains('active')) updateGridPreviewGap();
     });
     
-    // Мышь
     canvas.addEventListener('mousedown', startDrag);
-    window.addEventListener('mousemove', drag); // Слушаем window, чтобы не терять драг при выходе за пределы canvas
+    window.addEventListener('mousemove', drag);
     window.addEventListener('mouseup', endDrag);
     canvas.addEventListener('wheel', handleWheel, {passive: false});
     
-    // Тач
     canvas.addEventListener('touchstart', handleTouchStart, {passive: false});
     canvas.addEventListener('touchmove', handleTouchMove, {passive: false});
     canvas.addEventListener('touchend', endDrag);
@@ -150,7 +143,6 @@ function handleFile(file) {
             uploadArea.style.display = 'none';
             imageEditor.style.display = 'block';
             
-            // ИСПРАВЛЕНО: Ждем отрисовку DOM, затем инициализируем canvas правильного размера
             requestAnimationFrame(() => {
                 setupCanvas();
                 resetView();
@@ -186,11 +178,9 @@ function startDrag(e) {
 
 function drag(e) {
     if (!isDragging) return;
-    // e.preventDefault(); // Убрано для window, чтобы не ломать скролл страницы
     const dx = e.clientX - dragStartX;
     const dy = e.clientY - dragStartY;
     
-    // ИСПРАВЛЕНО: Делим на зум, чтобы движение мыши на 1px сдвигало картинку ровно на 1px на экране
     panX += dx / currentZoom;
     panY += dy / currentZoom;
     
@@ -301,12 +291,18 @@ function splitImage() {
     const targetWidth = cols * pieceWidth;
     const targetHeight = rows * pieceHeight;
     
-    const tempCanvas = document.createElement('canvas');
-    const tempCtx = tempCanvas.getContext('2d');
-    tempCanvas.width = targetWidth;
-    tempCanvas.height = targetHeight;
-    tempCtx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
+    // 1. ИСПРАВЛЕНО: Создаем canvas, который идеально повторяет вид редактора (с зумом и сдвигом), но в итоговом разрешении
+    const captureCanvas = document.createElement('canvas');
+    captureCanvas.width = targetWidth;
+    captureCanvas.height = targetHeight;
+    const cCtx = captureCanvas.getContext('2d');
     
+    cCtx.translate(targetWidth / 2, targetHeight / 2);
+    cCtx.scale(currentZoom, currentZoom);
+    cCtx.translate(panX, panY);
+    cCtx.drawImage(originalImage, -originalImage.width / 2, -originalImage.height / 2);
+    
+    // 2. Нарезаем уже трансформированное изображение
     splitImages = [];
     gridPreview.innerHTML = '';
     let partIndex = 0;
@@ -334,7 +330,8 @@ function splitImage() {
             const y = row * pieceHeight;
             const srcHeight = Math.max(0, pieceHeight - topPad - bottomPad);
             
-            finalCtx.drawImage(tempCanvas, x, y, pieceWidth, srcHeight, 0, topPad, pieceWidth, srcHeight);
+            // Вырезаем из captureCanvas, который уже содержит зум и сдвиг!
+            finalCtx.drawImage(captureCanvas, x, y, pieceWidth, srcHeight, 0, topPad, pieceWidth, srcHeight);
             
             const dataUrl = finalCanvas.toDataURL('image/png');
             splitImages.push({ dataUrl, name: generateFileName(partIndex) });
@@ -353,6 +350,36 @@ function splitImage() {
 
 async function downloadAllAsPng() {
     if (splitImages.length === 0) return;
+
+    // ИСПРАВЛЕНО: Нативный способ для iOS 15+ (открывает меню "Поделиться" -> "Сохранить в Файлы")
+    if (navigator.share && navigator.canShare) {
+        try {
+            const files = [];
+            for (const img of splitImages) {
+                const byteString = atob(img.dataUrl.split(',')[1]);
+                const mimeString = img.dataUrl.split(',')[0].split(':')[1].split(';')[0];
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+                for (let i = 0; i < byteString.length; i++) {
+                    ia[i] = byteString.charCodeAt(i);
+                }
+                files.push(new File([ab], img.name, { type: mimeString }));
+            }
+
+            if (navigator.canShare({ files })) {
+                await navigator.share({
+                    files: files,
+                    title: 'Нарезанные изображения',
+                });
+                return; // Успешно сохранено через нативное меню iOS
+            }
+        } catch (err) {
+            console.log('Share API failed, falling back to standard download', err);
+        }
+    }
+
+    // Fallback для десктопа и старых браузеров
+    alert('Нажмите "Разрешить", если браузер спросит разрешение на скачивание нескольких файлов.');
     for (let i = 0; i < splitImages.length; i++) {
         const img = splitImages[i];
         const link = document.createElement('a');
@@ -361,7 +388,7 @@ async function downloadAllAsPng() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        if (i < splitImages.length - 1) await new Promise(resolve => setTimeout(resolve, 300));
+        if (i < splitImages.length - 1) await new Promise(resolve => setTimeout(resolve, 500));
     }
 }
 
