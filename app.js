@@ -348,20 +348,14 @@ function splitImage() {
     
     const targetSize = cols * pieceSize;
     
+    // Создаём captureCanvas и рисуем в него готовый редактор с масштабированием
     const captureCanvas = document.createElement('canvas');
     captureCanvas.width = targetSize;
     captureCanvas.height = targetSize;
     const cCtx = captureCanvas.getContext('2d');
     
-    // Коэффициент масштабирования между редактором и captureCanvas
-    const scale = targetSize / canvas.width;
-    
-    // ИСПРАВЛЕНО: Применяем scale ко всем трансформациям
-    cCtx.translate(targetSize / 2, targetSize / 2);
-    cCtx.scale(currentZoom * scale, currentZoom * scale);  // <-- умножаем зум на scale
-    cCtx.rotate(rotation * Math.PI / 180);
-    cCtx.translate(panX * scale, panY * scale);
-    cCtx.drawImage(originalImage, -originalImage.width / 2, -originalImage.height / 2);
+    // Рисуем canvas (редактор) в captureCanvas с масштабированием
+    cCtx.drawImage(canvas, 0, 0, targetSize, targetSize);
     
     // Нарезаем
     splitImages = [];
