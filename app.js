@@ -11,6 +11,9 @@ let dragStartY = 0;
 let imageLoaded = false;
 let currentPadding = 5;
 let smoothingEnabled = true;
+let rowPaddings = []; // отступы между строками
+let colPaddings = []; // отступы между столбцами
+let useDetailedPaddings = false;
 
 // Canvas и контекст
 const canvas = document.getElementById('editCanvas');
@@ -37,6 +40,10 @@ const customCols = document.getElementById('customCols');
 const useCustomGrid = document.getElementById('useCustomGrid');
 const paddingInput = document.getElementById('paddingInput');
 const paddingDirection = document.getElementById('paddingDirection');
+const detailedPaddings = document.getElementById('detailedPaddings');
+const rowPaddingsContainer = document.getElementById('rowPaddings');
+const colPaddingsContainer = document.getElementById('colPaddings');
+const useDetailedPaddingsCheckbox = document.getElementById('useDetailedPaddings');
 const rotationSlider = document.getElementById('rotationSlider');
 const rotationValue = document.getElementById('rotationValue');
 const rotateLeft90Btn = document.getElementById('rotateLeft90');
@@ -121,6 +128,13 @@ function setupEventListeners() {
         if (previewSection.classList.contains('active')) updateGridPreviewGap();
     });
     
+    useDetailedPaddingsCheckbox.addEventListener('change', (e) => {
+        useDetailedPaddings = e.target.checked;
+        if (useDetailedPaddings) {
+            createDetailedPaddingInputs();
+        }
+    });
+    
     rotationSlider.addEventListener('input', (e) => {
         rotation = parseInt(e.target.value);
         rotationValue.textContent = rotation + '°';
@@ -167,10 +181,26 @@ function setupEventListeners() {
     splitBtn.addEventListener('click', splitImage);
     downloadPngBtn.addEventListener('click', downloadAllAsPng);
     
-    gridSize.addEventListener('change', updateGrid);
-    customRows.addEventListener('input', updateGrid);
-    customCols.addEventListener('input', updateGrid);
-    useCustomGrid.addEventListener('change', updateGrid);
+    gridSize.addEventListener('change', () => {
+        updateGrid();
+        if (useDetailedPaddings) createDetailedPaddingInputs();
+    });
+    customRows.addEventListener('input', () => {
+        if (useCustomGrid.checked) {
+            updateGrid();
+            if (useDetailedPaddings) createDetailedPaddingInputs();
+        }
+    });
+    customCols.addEventListener('input', () => {
+        if (useCustomGrid.checked) {
+            updateGrid();
+            if (useDetailedPaddings) createDetailedPaddingInputs();
+        }
+    });
+    useCustomGrid.addEventListener('change', () => {
+        updateGrid();
+        if (useDetailedPaddings && useCustomGrid.checked) createDetailedPaddingInputs();
+    });
     
     window.addEventListener('resize', () => {
         setupCanvas();
@@ -296,6 +326,71 @@ function getGridSize() {
     return { rows: val, cols: val };
 }
 
+function createDetailedPaddingInputs() {
+    const { rows, cols } = getGridSize();
+    
+    // Очищаем контейнеры
+    rowPaddingsContainer.innerHTML = '';
+    colPaddingsContainer.innerHTML = '';
+    
+    // Показываем панель детальных настроек
+    detailedPaddings.style.display = 'block';
+    
+    // Создаём поля для отступов между строками (rows - 1 штук)
+    for (let i = 0; i < rows - 1; i++) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'padding-input-wrapper';
+        
+        const label = document.createElement('label');
+        label.textContent = `Ряд ${i + 1}-${i + 2}`;
+        
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = '0';
+        input.max = '50';
+        input.value = rowPaddings[i] !== undefined ? rowPaddings[i] : currentPadding;
+        input.dataset.index = i;
+        
+        input.addEventListener('input', (e) => {
+            let value = parseInt(e.target.value);
+            if (isNaN(value) || value < 0) value = 0;
+            if (value > 50) value = 50;
+            rowPaddings[i] = value;
+        });
+        
+        wrapper.appendChild(label);
+        wrapper.appendChild(input);
+        rowPaddingsContainer.appendChild(wrapper);
+    }
+    
+    // Создаём поля для отступов между столбцами (cols - 1 штук)
+    for (let i = 0; i < cols - 1; i++) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'padding-input-wrapper';
+        
+        const label = document.createElement('label');
+        label.textContent = `Столбец ${i + 1}-${i + 2}`;
+        
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = '0';
+        input.max = '50';
+        input.value = colPaddings[i] !== undefined ? colPaddings[i] : currentPadding;
+        input.dataset.index = i;
+        
+        input.addEventListener('input', (e) => {
+            let value = parseInt(e.target.value);
+            if (isNaN(value) || value < 0) value = 0;
+            if (value > 50) value = 50;
+            colPaddings[i] = value;
+        });
+        
+        wrapper.appendChild(label);
+        wrapper.appendChild(input);
+        colPaddingsContainer.appendChild(wrapper);
+    }
+}
+
 function updateGrid() {
     if (!imageLoaded) return;
     const { rows, cols } = getGridSize();
@@ -343,21 +438,17 @@ function splitImage() {
     if (!originalImage) return;
     const { rows, cols } = getGridSize();
     const pieceSize = 100;
-    const padding = currentPadding;
     const paddingDir = paddingDirection.value;
     
     const targetSize = cols * pieceSize;
     
-    // Создаём captureCanvas и рисуем в него готовый редактор с масштабированием
     const captureCanvas = document.createElement('canvas');
     captureCanvas.width = targetSize;
     captureCanvas.height = targetSize;
     const cCtx = captureCanvas.getContext('2d');
     
-    // Рисуем canvas (редактор) в captureCanvas с масштабированием
     cCtx.drawImage(canvas, 0, 0, targetSize, targetSize);
     
-    // Нарезаем
     splitImages = [];
     gridPreview.innerHTML = '';
     let partIndex = 0;
@@ -372,16 +463,40 @@ function splitImage() {
             finalCtx.imageSmoothingEnabled = smoothingEnabled;
             finalCtx.imageSmoothingQuality = 'high';
             
+            // Получаем отступы (детальные или базовые)
             let topPad = 0, bottomPad = 0;
             
-            if (paddingDir === 'between') {
-                if (row === 0) { topPad = 0; bottomPad = padding; }
-                else if (row === rows - 1) { topPad = padding; bottomPad = 0; }
-                else { topPad = padding; bottomPad = padding; }
-            } else if (paddingDir === 'top') {
-                topPad = padding; bottomPad = 0;
-            } else if (paddingDir === 'bottom') {
-                topPad = 0; bottomPad = padding;
+            if (useDetailedPaddings) {
+                // Используем детальные отступы
+                if (paddingDir === 'between') {
+                    if (row === 0) {
+                        topPad = 0;
+                        bottomPad = rowPaddings[0] !== undefined ? rowPaddings[0] : currentPadding;
+                    } else if (row === rows - 1) {
+                        topPad = rowPaddings[row - 2] !== undefined ? rowPaddings[row - 2] : currentPadding;
+                        bottomPad = 0;
+                    } else {
+                        topPad = rowPaddings[row - 1] !== undefined ? rowPaddings[row - 1] : currentPadding;
+                        bottomPad = rowPaddings[row] !== undefined ? rowPaddings[row] : currentPadding;
+                    }
+                } else if (paddingDir === 'top') {
+                    topPad = rowPaddings[row] !== undefined ? rowPaddings[row] : currentPadding;
+                    bottomPad = 0;
+                } else if (paddingDir === 'bottom') {
+                    topPad = 0;
+                    bottomPad = rowPaddings[row] !== undefined ? rowPaddings[row] : currentPadding;
+                }
+            } else {
+                // Используем базовый отступ
+                if (paddingDir === 'between') {
+                    if (row === 0) { topPad = 0; bottomPad = currentPadding; }
+                    else if (row === rows - 1) { topPad = currentPadding; bottomPad = 0; }
+                    else { topPad = currentPadding; bottomPad = currentPadding; }
+                } else if (paddingDir === 'top') {
+                    topPad = currentPadding; bottomPad = 0;
+                } else if (paddingDir === 'bottom') {
+                    topPad = 0; bottomPad = currentPadding;
+                }
             }
             
             const x = col * pieceSize;

@@ -62,7 +62,6 @@
                     <div class="grid-overlay" id="gridOverlay"></div>
                 </div>
                 
-                <!-- ВРАЩЕНИЕ ПЕРЕНЕСЕНО СЮДА -->
                 <div class="rotation-panel">
                     <label class="rotation-label">Вращение:</label>
                     <div class="rotation-controls">
@@ -107,7 +106,7 @@
             </div>
 
             <div class="control-group">
-                <label for="paddingInput">Отступы между частями (пиксели):</label>
+                <label for="paddingInput">Базовые отступы (пиксели):</label>
                 <input type="number" id="paddingInput" min="0" max="50" step="1" value="5">
                 
                 <label for="paddingDirection" style="margin-top: 15px;">Направление отступа:</label>
@@ -116,9 +115,23 @@
                     <option value="top">Только сверху</option>
                     <option value="bottom">Только снизу</option>
                 </select>
+                
+                <div class="detailed-paddings" id="detailedPaddings" style="display: none;">
+                    <div class="padding-section">
+                        <label class="padding-section-title">Отступы между строками:</label>
+                        <div id="rowPaddings" class="padding-inputs"></div>
+                    </div>
+                    <div class="padding-section">
+                        <label class="padding-section-title">Отступы между столбцами:</label>
+                        <div id="colPaddings" class="padding-inputs"></div>
+                    </div>
+                    <label style="margin-top: 10px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="useDetailedPaddings">
+                        <span>Использовать детальные настройки</span>
+                    </label>
+                </div>
             </div>
 
-            <!-- СГЛАЖИВАНИЕ С НОВЫМ ДИЗАЙНОМ -->
             <div class="control-group smoothing-group">
                 <div class="smoothing-header">
                     <span class="smoothing-title">Сглаживание (антиалиасинг)</span>
