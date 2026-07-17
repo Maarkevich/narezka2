@@ -1,4 +1,9 @@
-// Глобальные переменные
+/**
+ * Project: Image Splitter 100x100
+ * File: app.js
+ * Version: 1.0.0
+ */
+
 let originalImage = null;
 let splitImages = [];
 let currentZoom = 1;
@@ -11,15 +16,13 @@ let dragStartY = 0;
 let imageLoaded = false;
 let currentPadding = 5;
 let smoothingEnabled = true;
-let rowPaddings = []; // отступы между строками
-let colPaddings = []; // отступы между столбцами
+let rowPaddings = [];
+let colPaddings = [];
 let useDetailedPaddings = false;
 
-// Canvas и контекст
 const canvas = document.getElementById('editCanvas');
 const ctx = canvas.getContext('2d');
 
-// Элементы DOM
 const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('fileInput');
 const imageEditor = document.getElementById('imageEditor');
@@ -78,7 +81,6 @@ function setupCanvas() {
 function updateCanvasTransform() {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
     if (originalImage) {
         ctx.save();
         ctx.translate(canvas.width / 2, canvas.height / 2);
@@ -130,9 +132,7 @@ function setupEventListeners() {
     
     useDetailedPaddingsCheckbox.addEventListener('change', (e) => {
         useDetailedPaddings = e.target.checked;
-        if (useDetailedPaddings) {
-            createDetailedPaddingInputs();
-        }
+        if (useDetailedPaddings) createDetailedPaddingInputs();
     });
     
     rotationSlider.addEventListener('input', (e) => {
@@ -181,26 +181,10 @@ function setupEventListeners() {
     splitBtn.addEventListener('click', splitImage);
     downloadPngBtn.addEventListener('click', downloadAllAsPng);
     
-    gridSize.addEventListener('change', () => {
-        updateGrid();
-        if (useDetailedPaddings) createDetailedPaddingInputs();
-    });
-    customRows.addEventListener('input', () => {
-        if (useCustomGrid.checked) {
-            updateGrid();
-            if (useDetailedPaddings) createDetailedPaddingInputs();
-        }
-    });
-    customCols.addEventListener('input', () => {
-        if (useCustomGrid.checked) {
-            updateGrid();
-            if (useDetailedPaddings) createDetailedPaddingInputs();
-        }
-    });
-    useCustomGrid.addEventListener('change', () => {
-        updateGrid();
-        if (useDetailedPaddings && useCustomGrid.checked) createDetailedPaddingInputs();
-    });
+    gridSize.addEventListener('change', () => { updateGrid(); if (useDetailedPaddings) createDetailedPaddingInputs(); });
+    customRows.addEventListener('input', () => { if (useCustomGrid.checked) { updateGrid(); if (useDetailedPaddings) createDetailedPaddingInputs(); } });
+    customCols.addEventListener('input', () => { if (useCustomGrid.checked) { updateGrid(); if (useDetailedPaddings) createDetailedPaddingInputs(); } });
+    useCustomGrid.addEventListener('change', () => { updateGrid(); if (useDetailedPaddings && useCustomGrid.checked) createDetailedPaddingInputs(); });
     
     window.addEventListener('resize', () => {
         setupCanvas();
@@ -211,7 +195,6 @@ function setupEventListeners() {
 function updateSmoothingStatus() {
     const onIndicator = smoothingStatus.querySelector('.on');
     const offIndicator = smoothingStatus.querySelector('.off');
-    
     if (smoothingEnabled) {
         onIndicator.style.display = 'inline-block';
         offIndicator.style.display = 'none';
@@ -230,7 +213,6 @@ function handleFile(file) {
             imageLoaded = true;
             uploadArea.style.display = 'none';
             imageEditor.style.display = 'block';
-            
             requestAnimationFrame(() => {
                 setupCanvas();
                 resetView();
@@ -250,9 +232,7 @@ function zoom(delta) {
 }
 
 function resetView() {
-    currentZoom = 1; 
-    panX = 0; 
-    panY = 0;
+    currentZoom = 1; panX = 0; panY = 0;
     zoomInput.value = 100;
     updateCanvasTransform();
 }
@@ -268,19 +248,14 @@ function drag(e) {
     if (!isDragging) return;
     const dx = e.clientX - dragStartX;
     const dy = e.clientY - dragStartY;
-    
     panX += dx / currentZoom;
     panY += dy / currentZoom;
-    
     dragStartX = e.clientX;
     dragStartY = e.clientY;
     updateCanvasTransform();
 }
 
-function endDrag() { 
-    isDragging = false; 
-    canvas.style.cursor = 'move'; 
-}
+function endDrag() { isDragging = false; canvas.style.cursor = 'move'; }
 
 function handleWheel(e) {
     e.preventDefault();
@@ -289,11 +264,8 @@ function handleWheel(e) {
 
 let initialPinchDistance = null;
 function handleTouchStart(e) {
-    if (e.touches.length === 2) {
-        initialPinchDistance = getPinchDistance(e.touches);
-    } else if (e.touches.length === 1) {
-        startDrag(e.touches[0]);
-    }
+    if (e.touches.length === 2) initialPinchDistance = getPinchDistance(e.touches);
+    else if (e.touches.length === 1) startDrag(e.touches[0]);
 }
 
 function handleTouchMove(e) {
@@ -328,63 +300,47 @@ function getGridSize() {
 
 function createDetailedPaddingInputs() {
     const { rows, cols } = getGridSize();
-    
-    // Очищаем контейнеры
     rowPaddingsContainer.innerHTML = '';
     colPaddingsContainer.innerHTML = '';
-    
-    // Показываем панель детальных настроек
     detailedPaddings.style.display = 'block';
     
-    // Создаём поля для отступов между строками (rows - 1 штук)
     for (let i = 0; i < rows - 1; i++) {
         const wrapper = document.createElement('div');
         wrapper.className = 'padding-input-wrapper';
-        
         const label = document.createElement('label');
         label.textContent = `Ряд ${i + 1}-${i + 2}`;
-        
         const input = document.createElement('input');
         input.type = 'number';
         input.min = '0';
         input.max = '50';
         input.value = rowPaddings[i] !== undefined ? rowPaddings[i] : currentPadding;
-        input.dataset.index = i;
-        
         input.addEventListener('input', (e) => {
             let value = parseInt(e.target.value);
             if (isNaN(value) || value < 0) value = 0;
             if (value > 50) value = 50;
             rowPaddings[i] = value;
         });
-        
         wrapper.appendChild(label);
         wrapper.appendChild(input);
         rowPaddingsContainer.appendChild(wrapper);
     }
     
-    // Создаём поля для отступов между столбцами (cols - 1 штук)
     for (let i = 0; i < cols - 1; i++) {
         const wrapper = document.createElement('div');
         wrapper.className = 'padding-input-wrapper';
-        
         const label = document.createElement('label');
         label.textContent = `Столбец ${i + 1}-${i + 2}`;
-        
         const input = document.createElement('input');
         input.type = 'number';
         input.min = '0';
         input.max = '50';
         input.value = colPaddings[i] !== undefined ? colPaddings[i] : currentPadding;
-        input.dataset.index = i;
-        
         input.addEventListener('input', (e) => {
             let value = parseInt(e.target.value);
             if (isNaN(value) || value < 0) value = 0;
             if (value > 50) value = 50;
             colPaddings[i] = value;
         });
-        
         wrapper.appendChild(label);
         wrapper.appendChild(input);
         colPaddingsContainer.appendChild(wrapper);
@@ -439,7 +395,6 @@ function splitImage() {
     const { rows, cols } = getGridSize();
     const pieceSize = 100;
     const paddingDir = paddingDirection.value;
-    
     const targetSize = cols * pieceSize;
     
     const captureCanvas = document.createElement('canvas');
@@ -447,6 +402,7 @@ function splitImage() {
     captureCanvas.height = targetSize;
     const cCtx = captureCanvas.getContext('2d');
     
+    // Ключевое исправление: рисуем готовый canvas редактора, сохраняя все пропорции и сдвиги
     cCtx.drawImage(canvas, 0, 0, targetSize, targetSize);
     
     splitImages = [];
@@ -463,40 +419,25 @@ function splitImage() {
             finalCtx.imageSmoothingEnabled = smoothingEnabled;
             finalCtx.imageSmoothingQuality = 'high';
             
-            // Получаем отступы (детальные или базовые)
             let topPad = 0, bottomPad = 0;
             
             if (useDetailedPaddings) {
-                // Используем детальные отступы
                 if (paddingDir === 'between') {
-                    if (row === 0) {
-                        topPad = 0;
-                        bottomPad = rowPaddings[0] !== undefined ? rowPaddings[0] : currentPadding;
-                    } else if (row === rows - 1) {
-                        topPad = rowPaddings[row - 2] !== undefined ? rowPaddings[row - 2] : currentPadding;
-                        bottomPad = 0;
-                    } else {
-                        topPad = rowPaddings[row - 1] !== undefined ? rowPaddings[row - 1] : currentPadding;
-                        bottomPad = rowPaddings[row] !== undefined ? rowPaddings[row] : currentPadding;
-                    }
+                    if (row === 0) { topPad = 0; bottomPad = rowPaddings[0] !== undefined ? rowPaddings[0] : currentPadding; }
+                    else if (row === rows - 1) { topPad = rowPaddings[row - 2] !== undefined ? rowPaddings[row - 2] : currentPadding; bottomPad = 0; }
+                    else { topPad = rowPaddings[row - 1] !== undefined ? rowPaddings[row - 1] : currentPadding; bottomPad = rowPaddings[row] !== undefined ? rowPaddings[row] : currentPadding; }
                 } else if (paddingDir === 'top') {
-                    topPad = rowPaddings[row] !== undefined ? rowPaddings[row] : currentPadding;
-                    bottomPad = 0;
+                    topPad = rowPaddings[row] !== undefined ? rowPaddings[row] : currentPadding; bottomPad = 0;
                 } else if (paddingDir === 'bottom') {
-                    topPad = 0;
-                    bottomPad = rowPaddings[row] !== undefined ? rowPaddings[row] : currentPadding;
+                    topPad = 0; bottomPad = rowPaddings[row] !== undefined ? rowPaddings[row] : currentPadding;
                 }
             } else {
-                // Используем базовый отступ
                 if (paddingDir === 'between') {
                     if (row === 0) { topPad = 0; bottomPad = currentPadding; }
                     else if (row === rows - 1) { topPad = currentPadding; bottomPad = 0; }
                     else { topPad = currentPadding; bottomPad = currentPadding; }
-                } else if (paddingDir === 'top') {
-                    topPad = currentPadding; bottomPad = 0;
-                } else if (paddingDir === 'bottom') {
-                    topPad = 0; bottomPad = currentPadding;
-                }
+                } else if (paddingDir === 'top') { topPad = currentPadding; bottomPad = 0; }
+                else if (paddingDir === 'bottom') { topPad = 0; bottomPad = currentPadding; }
             }
             
             const x = col * pieceSize;
@@ -510,11 +451,9 @@ function splitImage() {
             
             const wrapper = document.createElement('div');
             wrapper.className = 'part-wrapper';
-            
             const img = document.createElement('img');
             img.src = dataUrl;
             img.alt = `Часть ${partIndex}`;
-            
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.checked = true;
@@ -524,7 +463,6 @@ function splitImage() {
             wrapper.appendChild(img);
             wrapper.appendChild(checkbox);
             gridPreview.appendChild(wrapper);
-            
             partIndex++;
         }
     }
@@ -539,11 +477,7 @@ async function downloadAllAsPng() {
 
     const checkboxes = gridPreview.querySelectorAll('input[type="checkbox"]');
     const selectedIndices = new Set();
-    checkboxes.forEach(cb => {
-        if (cb.checked) {
-            selectedIndices.add(parseInt(cb.dataset.index));
-        }
-    });
+    checkboxes.forEach(cb => { if (cb.checked) selectedIndices.add(parseInt(cb.dataset.index)); });
 
     if (selectedIndices.size === 0) {
         alert('Пожалуйста, выберите хотя бы одну часть для скачивания!');
@@ -560,17 +494,11 @@ async function downloadAllAsPng() {
                 const mimeString = img.dataUrl.split(',')[0].split(':')[1].split(';')[0];
                 const ab = new ArrayBuffer(byteString.length);
                 const ia = new Uint8Array(ab);
-                for (let i = 0; i < byteString.length; i++) {
-                    ia[i] = byteString.charCodeAt(i);
-                }
+                for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
                 files.push(new File([ab], img.name, { type: mimeString }));
             }
-
             if (navigator.canShare({ files })) {
-                await navigator.share({
-                    files: files,
-                    title: 'Нарезанные изображения',
-                });
+                await navigator.share({ files: files, title: 'Нарезанные изображения' });
                 return;
             }
         } catch (err) {

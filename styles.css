@@ -1,3 +1,9 @@
+/*
+ * Project: Image Splitter 100x100
+ * File: styles.css
+ * Version: 1.0.0
+ */
+
 * {
     margin: 0;
     padding: 0;
@@ -308,7 +314,6 @@ select, input[type="number"] {
 
 select:focus, input:focus { outline: none; border-color: #4a90d9; }
 
-/* Детальные настройки отступов */
 .detailed-paddings {
     margin-top: 15px;
     padding: 15px;
@@ -555,21 +560,13 @@ select:focus, input:focus { outline: none; border-color: #4a90d9; }
 }
 
 @media (min-width: 768px) {
-    .controls {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .controls .btn {
-        grid-column: 1 / -1;
-    }
-    .download-buttons {
-        grid-template-columns: repeat(2, 1fr);
-    }
+    .controls { grid-template-columns: repeat(2, 1fr); }
+    .controls .btn { grid-column: 1 / -1; }
+    .download-buttons { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (min-width: 1024px) {
-    .controls {
-        grid-template-columns: repeat(3, 1fr);
-    }
+    .controls { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 480px) {
@@ -577,21 +574,9 @@ select:focus, input:focus { outline: none; border-color: #4a90d9; }
     h1 { font-size: 1.5em; }
     .upload-area { padding: 30px 20px; min-height: 200px; }
     .part-wrapper img { width: 80px; height: 80px; }
-    .rotation-controls {
-        flex-wrap: wrap;
-    }
-    .tool-btn-small {
-        padding: 8px 12px;
-        font-size: 13px;
-    }
-    .padding-inputs {
-        justify-content: center;
-    }
-    .padding-input-wrapper {
-        min-width: 50px;
-    }
-    .padding-input-wrapper input {
-        width: 40px;
-        font-size: 13px;
-    }
+    .rotation-controls { flex-wrap: wrap; }
+    .tool-btn-small { padding: 8px 12px; font-size: 13px; }
+    .padding-inputs { justify-content: center; }
+    .padding-input-wrapper { min-width: 50px; }
+    .padding-input-wrapper input { width: 40px; font-size: 13px; }
 }
