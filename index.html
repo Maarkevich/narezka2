@@ -1,7 +1,7 @@
 <!-- 
   Project: Image Splitter 100x100
   File: index.html
-  Version: 1.0.0
+  Version: 1.0.2
 -->
 <!DOCTYPE html>
 <html lang="ru">
@@ -12,9 +12,9 @@
     <meta name="description" content="Нарезка изображений на части 100x100 пикселей">
     <title>Image Splitter 100x100</title>
     
-    <link rel="manifest" href="manifest.json?v=1.0.0">
-    <link rel="apple-touch-icon" href="icon-192.png?v=1.0.0">
-    <link rel="stylesheet" href="styles.css?v=1.0.0">
+    <link rel="manifest" href="manifest.json?v=1.0.2">
+    <link rel="apple-touch-icon" href="icon-192.png?v=1.0.2">
+    <link rel="stylesheet" href="styles.css?v=1.0.2">
 </head>
 <body>
     <div class="container">
@@ -112,23 +112,32 @@
             </div>
 
             <div class="control-group">
-                <label for="paddingInput">Базовые отступы (пиксели):</label>
-                <input type="number" id="paddingInput" min="0" max="50" step="1" value="5">
+                <label>Базовые отступы (пиксели):</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <div>
+                        <label style="font-size: 0.9em; font-weight: 500; color: #666;">Между строками:</label>
+                        <input type="number" id="rowPaddingInput" min="0" max="50" step="1" value="5">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.9em; font-weight: 500; color: #666;">Между столбцами:</label>
+                        <input type="number" id="colPaddingInput" min="0" max="50" step="1" value="5">
+                    </div>
+                </div>
                 
-                <label for="paddingDirection" style="margin-top: 15px;">Направление отступа:</label>
+                <label for="paddingDirection">Направление отступа:</label>
                 <select id="paddingDirection">
-                    <option value="between">Между частями (сверху и снизу)</option>
-                    <option value="top">Только сверху</option>
-                    <option value="bottom">Только снизу</option>
+                    <option value="between">Между частями (не по краям)</option>
+                    <option value="top">Только сверху/слева</option>
+                    <option value="bottom">Только снизу/справа</option>
                 </select>
                 
                 <div class="detailed-paddings" id="detailedPaddings" style="display: none;">
                     <div class="padding-section">
-                        <label class="padding-section-title">Отступы между строками:</label>
+                        <label class="padding-section-title">Детальные отступы между строками:</label>
                         <div id="rowPaddings" class="padding-inputs"></div>
                     </div>
                     <div class="padding-section">
-                        <label class="padding-section-title">Отступы между столбцами:</label>
+                        <label class="padding-section-title">Детальные отступы между столбцами:</label>
                         <div id="colPaddings" class="padding-inputs"></div>
                     </div>
                     <label style="margin-top: 10px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
@@ -148,7 +157,7 @@
                 </div>
                 <div class="smoothing-status" id="smoothingStatus">
                     <span class="status-indicator on">✓ Включено</span>
-                    <span class="status-indicator off" style="display: none;">✗ Выключено</span>
+                    <span class="status-indicator off" style="display: none;"> Выключено</span>
                 </div>
                 <small style="color: #999; margin-top: 8px; display: block;">
                     Включите для плавных краёв, выключите для чётких пикселей
@@ -180,6 +189,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=1.0.0"></script>
+    <script src="app.js?v=1.0.2"></script>
 </body>
 </html>

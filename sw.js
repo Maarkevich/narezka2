@@ -1,17 +1,17 @@
 /**
  * Project: Image Splitter 100x100
  * File: sw.js
- * Version: 1.0.0
+ * Version: 1.0.2
  */
 
-const CACHE_NAME = 'image-splitter-v1.0.0';
+const CACHE_NAME = 'image-splitter-v1.0.2';
 
 const urlsToCache = [
     './',
-    './index.html?v=1.0.0',
-    './styles.css?v=1.0.0',
-    './app.js?v=1.0.0',
-    './manifest.json?v=1.0.0',
+    './index.html?v=1.0.2',
+    './styles.css?v=1.0.2',
+    './app.js?v=1.0.2',
+    './manifest.json?v=1.0.2',
     './icon-192.png',
     './icon-512.png'
 ];

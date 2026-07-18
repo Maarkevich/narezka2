@@ -1,7 +1,7 @@
 /**
  * Project: Image Splitter 100x100
  * File: app.js
- * Version: 1.0.0
+ * Version: 1.0.2
  */
 
 let originalImage = null;
@@ -14,7 +14,8 @@ let isDragging = false;
 let dragStartX = 0;
 let dragStartY = 0;
 let imageLoaded = false;
-let currentPadding = 5;
+let currentRowPadding = 5;
+let currentColPadding = 5;
 let smoothingEnabled = true;
 let rowPaddings = [];
 let colPaddings = [];
@@ -41,7 +42,8 @@ const gridSize = document.getElementById('gridSize');
 const customRows = document.getElementById('customRows');
 const customCols = document.getElementById('customCols');
 const useCustomGrid = document.getElementById('useCustomGrid');
-const paddingInput = document.getElementById('paddingInput');
+const rowPaddingInput = document.getElementById('rowPaddingInput');
+const colPaddingInput = document.getElementById('colPaddingInput');
 const paddingDirection = document.getElementById('paddingDirection');
 const detailedPaddings = document.getElementById('detailedPaddings');
 const rowPaddingsContainer = document.getElementById('rowPaddings');
@@ -122,11 +124,19 @@ function setupEventListeners() {
     });
     zoomInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') e.target.blur(); });
     
-    paddingInput.addEventListener('input', (e) => {
+    rowPaddingInput.addEventListener('input', (e) => {
         let value = parseInt(e.target.value);
         if (isNaN(value) || value < 0) value = 0;
         if (value > 50) value = 50;
-        currentPadding = value;
+        currentRowPadding = value;
+        if (previewSection.classList.contains('active')) updateGridPreviewGap();
+    });
+    
+    colPaddingInput.addEventListener('input', (e) => {
+        let value = parseInt(e.target.value);
+        if (isNaN(value) || value < 0) value = 0;
+        if (value > 50) value = 50;
+        currentColPadding = value;
         if (previewSection.classList.contains('active')) updateGridPreviewGap();
     });
     
@@ -313,7 +323,7 @@ function createDetailedPaddingInputs() {
         input.type = 'number';
         input.min = '0';
         input.max = '50';
-        input.value = rowPaddings[i] !== undefined ? rowPaddings[i] : currentPadding;
+        input.value = rowPaddings[i] !== undefined ? rowPaddings[i] : currentRowPadding;
         input.addEventListener('input', (e) => {
             let value = parseInt(e.target.value);
             if (isNaN(value) || value < 0) value = 0;
@@ -334,7 +344,7 @@ function createDetailedPaddingInputs() {
         input.type = 'number';
         input.min = '0';
         input.max = '50';
-        input.value = colPaddings[i] !== undefined ? colPaddings[i] : currentPadding;
+        input.value = colPaddings[i] !== undefined ? colPaddings[i] : currentColPadding;
         input.addEventListener('input', (e) => {
             let value = parseInt(e.target.value);
             if (isNaN(value) || value < 0) value = 0;
@@ -378,7 +388,9 @@ function updateGrid() {
     updateGridPreviewGap();
 }
 
-function updateGridPreviewGap() { gridPreview.style.gap = currentPadding + 'px'; }
+function updateGridPreviewGap() { 
+    gridPreview.style.gap = `${currentRowPadding}px ${currentColPadding}px`;
+}
 
 function generateFileName(index) {
     const now = new Date();
@@ -402,7 +414,6 @@ function splitImage() {
     captureCanvas.height = targetSize;
     const cCtx = captureCanvas.getContext('2d');
     
-    // Ключевое исправление: рисуем готовый canvas редактора, сохраняя все пропорции и сдвиги
     cCtx.drawImage(canvas, 0, 0, targetSize, targetSize);
     
     splitImages = [];
@@ -419,32 +430,73 @@ function splitImage() {
             finalCtx.imageSmoothingEnabled = smoothingEnabled;
             finalCtx.imageSmoothingQuality = 'high';
             
-            let topPad = 0, bottomPad = 0;
+            let topPad = 0, bottomPad = 0, leftPad = 0, rightPad = 0;
             
             if (useDetailedPaddings) {
+                // Вертикальные отступы (между строками)
                 if (paddingDir === 'between') {
-                    if (row === 0) { topPad = 0; bottomPad = rowPaddings[0] !== undefined ? rowPaddings[0] : currentPadding; }
-                    else if (row === rows - 1) { topPad = rowPaddings[row - 2] !== undefined ? rowPaddings[row - 2] : currentPadding; bottomPad = 0; }
-                    else { topPad = rowPaddings[row - 1] !== undefined ? rowPaddings[row - 1] : currentPadding; bottomPad = rowPaddings[row] !== undefined ? rowPaddings[row] : currentPadding; }
+                    if (row === 0) {
+                        topPad = 0;
+                        bottomPad = rowPaddings[0] !== undefined ? rowPaddings[0] : currentRowPadding;
+                    } else if (row === rows - 1) {
+                        topPad = rowPaddings[row - 2] !== undefined ? rowPaddings[row - 2] : currentRowPadding;
+                        bottomPad = 0;
+                    } else {
+                        topPad = rowPaddings[row - 1] !== undefined ? rowPaddings[row - 1] : currentRowPadding;
+                        bottomPad = rowPaddings[row] !== undefined ? rowPaddings[row] : currentRowPadding;
+                    }
                 } else if (paddingDir === 'top') {
-                    topPad = rowPaddings[row] !== undefined ? rowPaddings[row] : currentPadding; bottomPad = 0;
+                    topPad = rowPaddings[row] !== undefined ? rowPaddings[row] : currentRowPadding;
+                    bottomPad = 0;
                 } else if (paddingDir === 'bottom') {
-                    topPad = 0; bottomPad = rowPaddings[row] !== undefined ? rowPaddings[row] : currentPadding;
+                    topPad = 0;
+                    bottomPad = rowPaddings[row] !== undefined ? rowPaddings[row] : currentRowPadding;
+                }
+                
+                // Горизонтальные отступы (между столбцами)
+                if (paddingDir === 'between') {
+                    if (col === 0) {
+                        leftPad = 0;
+                        rightPad = colPaddings[0] !== undefined ? colPaddings[0] : currentColPadding;
+                    } else if (col === cols - 1) {
+                        leftPad = colPaddings[col - 2] !== undefined ? colPaddings[col - 2] : currentColPadding;
+                        rightPad = 0;
+                    } else {
+                        leftPad = colPaddings[col - 1] !== undefined ? colPaddings[col - 1] : currentColPadding;
+                        rightPad = colPaddings[col] !== undefined ? colPaddings[col] : currentColPadding;
+                    }
+                } else if (paddingDir === 'top') {
+                    leftPad = colPaddings[col] !== undefined ? colPaddings[col] : currentColPadding;
+                    rightPad = 0;
+                } else if (paddingDir === 'bottom') {
+                    leftPad = 0;
+                    rightPad = colPaddings[col] !== undefined ? colPaddings[col] : currentColPadding;
                 }
             } else {
+                // Базовые отступы
                 if (paddingDir === 'between') {
-                    if (row === 0) { topPad = 0; bottomPad = currentPadding; }
-                    else if (row === rows - 1) { topPad = currentPadding; bottomPad = 0; }
-                    else { topPad = currentPadding; bottomPad = currentPadding; }
-                } else if (paddingDir === 'top') { topPad = currentPadding; bottomPad = 0; }
-                else if (paddingDir === 'bottom') { topPad = 0; bottomPad = currentPadding; }
+                    if (row === 0) { topPad = 0; bottomPad = currentRowPadding; }
+                    else if (row === rows - 1) { topPad = currentRowPadding; bottomPad = 0; }
+                    else { topPad = currentRowPadding; bottomPad = currentRowPadding; }
+                    
+                    if (col === 0) { leftPad = 0; rightPad = currentColPadding; }
+                    else if (col === cols - 1) { leftPad = currentColPadding; rightPad = 0; }
+                    else { leftPad = currentColPadding; rightPad = currentColPadding; }
+                } else if (paddingDir === 'top') {
+                    topPad = currentRowPadding; bottomPad = 0;
+                    leftPad = currentColPadding; rightPad = 0;
+                } else if (paddingDir === 'bottom') {
+                    topPad = 0; bottomPad = currentRowPadding;
+                    leftPad = 0; rightPad = currentColPadding;
+                }
             }
             
             const x = col * pieceSize;
             const y = row * pieceSize;
+            const srcWidth = Math.max(0, pieceSize - leftPad - rightPad);
             const srcHeight = Math.max(0, pieceSize - topPad - bottomPad);
             
-            finalCtx.drawImage(captureCanvas, x, y, pieceSize, srcHeight, 0, topPad, pieceSize, srcHeight);
+            finalCtx.drawImage(captureCanvas, x + leftPad, y + topPad, srcWidth, srcHeight, leftPad, topPad, srcWidth, srcHeight);
             
             const dataUrl = finalCanvas.toDataURL('image/png');
             splitImages.push({ dataUrl, name: generateFileName(partIndex), index: partIndex });
