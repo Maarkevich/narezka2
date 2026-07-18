@@ -1,7 +1,7 @@
 /**
  * Project: Image Splitter 100x100
  * File: app.js
- * Version: 1.0.2
+ * Version: 1.0.3
  */
 
 let originalImage = null;
@@ -44,11 +44,14 @@ const customCols = document.getElementById('customCols');
 const useCustomGrid = document.getElementById('useCustomGrid');
 const rowPaddingInput = document.getElementById('rowPaddingInput');
 const colPaddingInput = document.getElementById('colPaddingInput');
-const paddingDirection = document.getElementById('paddingDirection');
+const rowPaddingDirection = document.getElementById('rowPaddingDirection');
+const colPaddingDirection = document.getElementById('colPaddingDirection');
 const detailedPaddings = document.getElementById('detailedPaddings');
 const rowPaddingsContainer = document.getElementById('rowPaddings');
 const colPaddingsContainer = document.getElementById('colPaddings');
 const useDetailedPaddingsCheckbox = document.getElementById('useDetailedPaddings');
+const useDetailedRowPaddings = document.getElementById('useDetailedRowPaddings');
+const useDetailedColPaddings = document.getElementById('useDetailedColPaddings');
 const rotationSlider = document.getElementById('rotationSlider');
 const rotationValue = document.getElementById('rotationValue');
 const rotateLeft90Btn = document.getElementById('rotateLeft90');
@@ -142,7 +145,11 @@ function setupEventListeners() {
     
     useDetailedPaddingsCheckbox.addEventListener('change', (e) => {
         useDetailedPaddings = e.target.checked;
-        if (useDetailedPaddings) createDetailedPaddingInputs();
+        if (useDetailedPaddings) {
+            createDetailedPaddingInputs();
+        } else {
+            detailedPaddings.style.display = 'none';
+        }
     });
     
     rotationSlider.addEventListener('input', (e) => {
@@ -406,7 +413,8 @@ function splitImage() {
     if (!originalImage) return;
     const { rows, cols } = getGridSize();
     const pieceSize = 100;
-    const paddingDir = paddingDirection.value;
+    const rowDir = rowPaddingDirection.value;
+    const colDir = colPaddingDirection.value;
     const targetSize = cols * pieceSize;
     
     const captureCanvas = document.createElement('canvas');
@@ -432,9 +440,11 @@ function splitImage() {
             
             let topPad = 0, bottomPad = 0, leftPad = 0, rightPad = 0;
             
-            if (useDetailedPaddings) {
-                // Вертикальные отступы (между строками)
-                if (paddingDir === 'between') {
+            // Вертикальные отступы (строки)
+            const useDetailedRows = useDetailedPaddings && useDetailedRowPaddings.checked;
+            
+            if (useDetailedRows) {
+                if (rowDir === 'between') {
                     if (row === 0) {
                         topPad = 0;
                         bottomPad = rowPaddings[0] !== undefined ? rowPaddings[0] : currentRowPadding;
@@ -445,16 +455,30 @@ function splitImage() {
                         topPad = rowPaddings[row - 1] !== undefined ? rowPaddings[row - 1] : currentRowPadding;
                         bottomPad = rowPaddings[row] !== undefined ? rowPaddings[row] : currentRowPadding;
                     }
-                } else if (paddingDir === 'top') {
+                } else if (rowDir === 'top') {
                     topPad = rowPaddings[row] !== undefined ? rowPaddings[row] : currentRowPadding;
                     bottomPad = 0;
-                } else if (paddingDir === 'bottom') {
+                } else if (rowDir === 'bottom') {
                     topPad = 0;
                     bottomPad = rowPaddings[row] !== undefined ? rowPaddings[row] : currentRowPadding;
                 }
-                
-                // Горизонтальные отступы (между столбцами)
-                if (paddingDir === 'between') {
+            } else {
+                if (rowDir === 'between') {
+                    if (row === 0) { topPad = 0; bottomPad = currentRowPadding; }
+                    else if (row === rows - 1) { topPad = currentRowPadding; bottomPad = 0; }
+                    else { topPad = currentRowPadding; bottomPad = currentRowPadding; }
+                } else if (rowDir === 'top') {
+                    topPad = currentRowPadding; bottomPad = 0;
+                } else if (rowDir === 'bottom') {
+                    topPad = 0; bottomPad = currentRowPadding;
+                }
+            }
+            
+            // Горизонтальные отступы (столбцы)
+            const useDetailedCols = useDetailedPaddings && useDetailedColPaddings.checked;
+            
+            if (useDetailedCols) {
+                if (colDir === 'between') {
                     if (col === 0) {
                         leftPad = 0;
                         rightPad = colPaddings[0] !== undefined ? colPaddings[0] : currentColPadding;
@@ -465,28 +489,21 @@ function splitImage() {
                         leftPad = colPaddings[col - 1] !== undefined ? colPaddings[col - 1] : currentColPadding;
                         rightPad = colPaddings[col] !== undefined ? colPaddings[col] : currentColPadding;
                     }
-                } else if (paddingDir === 'top') {
+                } else if (colDir === 'left') {
                     leftPad = colPaddings[col] !== undefined ? colPaddings[col] : currentColPadding;
                     rightPad = 0;
-                } else if (paddingDir === 'bottom') {
+                } else if (colDir === 'right') {
                     leftPad = 0;
                     rightPad = colPaddings[col] !== undefined ? colPaddings[col] : currentColPadding;
                 }
             } else {
-                // Базовые отступы
-                if (paddingDir === 'between') {
-                    if (row === 0) { topPad = 0; bottomPad = currentRowPadding; }
-                    else if (row === rows - 1) { topPad = currentRowPadding; bottomPad = 0; }
-                    else { topPad = currentRowPadding; bottomPad = currentRowPadding; }
-                    
+                if (colDir === 'between') {
                     if (col === 0) { leftPad = 0; rightPad = currentColPadding; }
                     else if (col === cols - 1) { leftPad = currentColPadding; rightPad = 0; }
                     else { leftPad = currentColPadding; rightPad = currentColPadding; }
-                } else if (paddingDir === 'top') {
-                    topPad = currentRowPadding; bottomPad = 0;
+                } else if (colDir === 'left') {
                     leftPad = currentColPadding; rightPad = 0;
-                } else if (paddingDir === 'bottom') {
-                    topPad = 0; bottomPad = currentRowPadding;
+                } else if (colDir === 'right') {
                     leftPad = 0; rightPad = currentColPadding;
                 }
             }

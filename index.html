@@ -1,7 +1,7 @@
 <!-- 
   Project: Image Splitter 100x100
   File: index.html
-  Version: 1.0.2
+  Version: 1.0.3
 -->
 <!DOCTYPE html>
 <html lang="ru">
@@ -12,9 +12,9 @@
     <meta name="description" content="Нарезка изображений на части 100x100 пикселей">
     <title>Image Splitter 100x100</title>
     
-    <link rel="manifest" href="manifest.json?v=1.0.2">
-    <link rel="apple-touch-icon" href="icon-192.png?v=1.0.2">
-    <link rel="stylesheet" href="styles.css?v=1.0.2">
+    <link rel="manifest" href="manifest.json?v=1.0.3">
+    <link rel="apple-touch-icon" href="icon-192.png?v=1.0.3">
+    <link rel="stylesheet" href="styles.css?v=1.0.3">
 </head>
 <body>
     <div class="container">
@@ -124,27 +124,48 @@
                     </div>
                 </div>
                 
-                <label for="paddingDirection">Направление отступа:</label>
-                <select id="paddingDirection">
-                    <option value="between">Между частями (не по краям)</option>
-                    <option value="top">Только сверху/слева</option>
-                    <option value="bottom">Только снизу/справа</option>
-                </select>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <div>
+                        <label style="font-size: 0.9em; font-weight: 500; color: #666;">Направление для строк:</label>
+                        <select id="rowPaddingDirection">
+                            <option value="between">Между строками</option>
+                            <option value="top">Только сверху</option>
+                            <option value="bottom">Только снизу</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.9em; font-weight: 500; color: #666;">Направление для столбцов:</label>
+                        <select id="colPaddingDirection">
+                            <option value="between">Между столбцами</option>
+                            <option value="left">Только слева</option>
+                            <option value="right">Только справа</option>
+                        </select>
+                    </div>
+                </div>
                 
                 <div class="detailed-paddings" id="detailedPaddings" style="display: none;">
                     <div class="padding-section">
                         <label class="padding-section-title">Детальные отступы между строками:</label>
                         <div id="rowPaddings" class="padding-inputs"></div>
+                        <label style="margin-top: 10px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="useDetailedRowPaddings">
+                            <span>Использовать детальные настройки для строк</span>
+                        </label>
                     </div>
                     <div class="padding-section">
                         <label class="padding-section-title">Детальные отступы между столбцами:</label>
                         <div id="colPaddings" class="padding-inputs"></div>
+                        <label style="margin-top: 10px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="useDetailedColPaddings">
+                            <span>Использовать детальные настройки для столбцов</span>
+                        </label>
                     </div>
-                    <label style="margin-top: 10px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="useDetailedPaddings">
-                        <span>Использовать детальные настройки</span>
-                    </label>
                 </div>
+                
+                <label style="margin-top: 10px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="useDetailedPaddings">
+                    <span>Показать детальные настройки</span>
+                </label>
             </div>
 
             <div class="control-group smoothing-group">
@@ -157,7 +178,7 @@
                 </div>
                 <div class="smoothing-status" id="smoothingStatus">
                     <span class="status-indicator on">✓ Включено</span>
-                    <span class="status-indicator off" style="display: none;"> Выключено</span>
+                    <span class="status-indicator off" style="display: none;">✗ Выключено</span>
                 </div>
                 <small style="color: #999; margin-top: 8px; display: block;">
                     Включите для плавных краёв, выключите для чётких пикселей
@@ -189,6 +210,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=1.0.2"></script>
+    <script src="app.js?v=1.0.3"></script>
 </body>
 </html>
